@@ -18,8 +18,9 @@ env:
   PANDOC_CROSSREF_VERSION: "0.3.17.1"
   LUA_VERSION: "5.4"
   PANDOC_PLOT_VERSION: "1.8.0"
-  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:test
-  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:final  
+  IMAGE_NAME: "aih-pandoc"
+  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ IMAGE_NAME }}:test
+  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ IMAGE_NAME }}:final  
 
 jobs:
   build:
