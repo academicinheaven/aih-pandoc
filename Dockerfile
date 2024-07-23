@@ -15,7 +15,8 @@ ARG PANDOC_CROSSREF_VERSION=0.3.17.1
 ARG PANDOC_PLOT_VERSION=1.8.0
 
 # Stage 1: Patched version of Micromamba / Debian
-FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
+# FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
+FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION}
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
@@ -26,11 +27,12 @@ ARG ENVIRONMENT_FILE
 # We need to switch back to the original bash shell for all standard stuff,
 # since Micromamba has its own shell script for all mamba-related stuff
 # TODO: Check
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER root
-RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get -y upgrade
 # Back to the micromamba shell
-SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
+# SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
 # RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
 COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
