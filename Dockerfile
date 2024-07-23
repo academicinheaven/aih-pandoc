@@ -2,7 +2,7 @@
 # based on https://github.com/pandoc/dockerfiles
 
 ARG MICROMAMBA_VERSION=latest
-ARG ENVIRONMENT_FILE=env.yaml
+ARG ENVIRONMENT_FILE="env.yaml"
 ARG BASE_IMAGE=mambaorg/micromamba
 # Platform is used for URIs of binaries, mainly Pandoc
 # Use ARG PLATFORM=amd64 for Intel (not tested)
@@ -30,17 +30,17 @@ ARG ENVIRONMENT_FILE
 USER root
 RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 # Back to the micromamba shell
-SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
+# SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
-RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
+# RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
 COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-RUN echo Content of env.yaml
-RUN cat /tmp/env.yaml
+# ARG MAMBA_DOCKERFILE_ACTIVATE=1
+# RUN echo Content of env.yaml
+# RUN cat /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
 WORKDIR /usr/aih/data/src
 COPY --chown=$MAMBA_USER:$MAMBA_USER tests/ ./
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN ls .
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
