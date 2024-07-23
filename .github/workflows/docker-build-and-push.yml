@@ -2,9 +2,11 @@ name: Build Docker Image
 
 on:
   push:
-    tags:
-      - 'v*'
-      - 'latest'
+    branches:
+      - main
+#    tags:
+#      - 'v*'
+#      - ''
   workflow_dispatch:
     inputs:
       tag:
@@ -12,9 +14,8 @@ on:
         required: true
         default: 'latest'
 
-# Load from versions.txt later on
-# Or do this in the docker file
-env:
+# env:
+#  IMAGE_NAME: "aih-pandoc"
 #  MICROMAMBA_VERSION: "1.5.8"
 #  ENVIRONMENT_FILE: "env.yaml"
 #  PANDOC_VERSION: "3.2"
@@ -22,7 +23,6 @@ env:
 #  PANDOC_CROSSREF_VERSION: "0.3.17.1"
 #  LUA_VERSION: "5.4"
 #  PANDOC_PLOT_VERSION: "1.8.0"
-  IMAGE_NAME: "aih-pandoc"
 #  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}  
 #  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:test
 #  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:final  
@@ -55,19 +55,13 @@ jobs:
       - name: Set build environment variables
         id: set-env
         run: |
-          TAG_NAME=${{ github.event.inputs.tag || github.ref }}
-          if [[ "$TAG_NAME" == "refs/tags/latest" || "$TAG_NAME" == "latest" ]]; then
-            VERSION_FILE="versions.txt"
-            IMAGE_TAG="latest"
-          else
-            VERSION_NUMBER=$(basename "$TAG_NAME")
-            VERSION_FILE="freeze/versions_${VERSION_NUMBER}.txt"
-            IMAGE_TAG="$VERSION_NUMBER"
-          fi          
+          VERSION_FILE="versions.txt"
           if [ -f "$VERSION_FILE" ]; then
-            echo "Found settings file for version $TAG_NAME"
+            echo "Found settings file $VERSION_FILE"
             source $VERSION_FILE
             echo "MICROMAMBA_VERSION=${MICROMAMBA_VERSION}" >> $GITHUB_ENV
+            echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
             echo "PANDOC_VERSION=${PANDOC_VERSION}" >> $GITHUB_ENV
             echo "PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION}" >> $GITHUB_ENV
             echo "PANDOC_CROSSREF_VERSION=${PANDOC_CROSSREF_VERSION}" >> $GITHUB_ENV
@@ -97,7 +91,7 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:test /bin/bash ./run_tests.sh
+          docker run --rm ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} /bin/bash ./run_tests.sh
 
       - name: Build and push
         uses: docker/build-push-action@v6
