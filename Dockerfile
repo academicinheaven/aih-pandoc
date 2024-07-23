@@ -2,7 +2,7 @@
 # based on https://github.com/pandoc/dockerfiles
 
 ARG MICROMAMBA_VERSION=latest
-ARG ENVIRONMENT_FILE=env.yaml.lock
+ARG ENVIRONMENT_FILE=env.yaml
 ARG BASE_IMAGE=mambaorg/micromamba
 # Platform is used for URIs of binaries, mainly Pandoc
 # Use ARG PLATFORM=amd64 for Intel (not tested)

@@ -8,11 +8,37 @@ As [Academic in Heaven](https://github.com/academicinheaven) is based on `microm
 and
 2. core Pandoc components like `pandoc-plot` need to be built with the same Pandoc version,
 
-we compile Pandoc and such components from their Haskell sources.
+we build Pandoc and all required components components from their Haskell packages from their sources from the Haskell package repository [**Hackage**](https://hackage.haskell.org/) via [`cabal-install`](https://hackage.haskell.org/package/cabal-install).
 
 As this is is a lengthy process (30 minutes and more), we keep this process separate from the core Academic in Heaven images.
 
+## Components
+
+1. [`micromamba-docker`](https://github.com/mamba-org/micromamba-docker/releases/)
+    - [Github repository](https://github.com/mamba-org/micromamba-docker)
+2. [`pandoc`](https://hackage.haskell.org/package/pandoc)
+    - [Github repository](https://github.com/jgm/pandoc)
+3. [`pandoc-cli`](https://hackage.haskell.org/package/pandoc-cli)
+4. [`pandoc-crossref`](https://hackage.haskell.org/package/pandoc-crossref)
+5. [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
+
+
+## Releases and Tags
+
+The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** 
+
+| Tag / Release | Pandoc version | Image tag on Docker Hub |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- 
+| latest | max(Pandoc) | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
+| v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
+
+The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release are in 
+`freeze/<version>`.
+
 ## Build
+
+### Build via Github Action
+
 
 ### Local Build
 
