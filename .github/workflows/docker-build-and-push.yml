@@ -93,7 +93,7 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} /bin/bash ./run_tests.sh
+          docker run --rm ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} /bin/bash ./run_tests.sh
 
       - name: Build and push
         uses: docker/build-push-action@v6
