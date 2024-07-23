@@ -15,17 +15,17 @@ on:
 # Load from versions.txt later on
 # Or do this in the docker file
 env:
-  MICROMAMBA_VERSION: "1.5.8"
-  ENVIRONMENT_FILE: "env.yaml"
-  PANDOC_VERSION: "3.2"
-  PANDOC_CLI_VERSION: "3.2"
-  PANDOC_CROSSREF_VERSION: "0.3.17.1"
-  LUA_VERSION: "5.4"
-  PANDOC_PLOT_VERSION: "1.8.0"
+#  MICROMAMBA_VERSION: "1.5.8"
+#  ENVIRONMENT_FILE: "env.yaml"
+#  PANDOC_VERSION: "3.2"
+#  PANDOC_CLI_VERSION: "3.2"
+#  PANDOC_CROSSREF_VERSION: "0.3.17.1"
+#  LUA_VERSION: "5.4"
+#  PANDOC_PLOT_VERSION: "1.8.0"
   IMAGE_NAME: "aih-pandoc"
-  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}  
-  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:test
-  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:final  
+#  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}  
+#  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:test
+#  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:final  
 
 jobs:
   build:
