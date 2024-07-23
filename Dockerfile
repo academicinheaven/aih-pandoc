@@ -15,11 +15,12 @@ ARG PANDOC_CROSSREF_VERSION=0.3.17.1
 ARG PANDOC_PLOT_VERSION=1.8.0
 
 # Stage 1: Patched version of Micromamba / Debian
-FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} as micromamba_patched
+FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
 ARG PANDOC_PLOT_VERSION
+ARG ENVIRONMENT_FILE
 # Install security updates if base image is not yet patched
 # Inspired by https://pythonspeed.com/articles/security-updates-in-docker/
 # We need to switch back to the original bash shell for all standard stuff,
