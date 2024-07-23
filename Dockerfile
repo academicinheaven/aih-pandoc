@@ -3,7 +3,7 @@
 
 ARG MICROMAMBA_VERSION="1.5.8"
 ARG ENVIRONMENT_FILE="env.yaml"
-ARG BASE_IMAGE=mambaorg/micromamba
+ARG BASE_IMAGE="mambaorg/micromamba"
 # Platform is used for URIs of binaries, mainly Pandoc
 # Use ARG PLATFORM=amd64 for Intel (not tested)
 ARG PLATFORM=arm64
@@ -17,13 +17,13 @@ ARG PANDOC_PLOT_VERSION=1.8.0
 # Stage 1: Patched version of Micromamba / Debian
 # FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION}
-
-
+ARG MICROMAMBA_VERSION
+ARG ENVIRONMENT_FILE
+ARG BASE_IMAGE
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
 ARG PANDOC_PLOT_VERSION
-ARG ENVIRONMENT_FILE
 # Install security updates if base image is not yet patched
 # Inspired by https://pythonspeed.com/articles/security-updates-in-docker/
 # We need to switch back to the original bash shell for all standard stuff,
@@ -36,8 +36,11 @@ RUN apt-get update && apt-get -y upgrade
 # Back to the micromamba shell
 # SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
-# RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
+RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
+RUN cat $ENVIRONMENT_FILE
 COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
+RUN ls -la .
+RUN cat /tmp/env.yaml
 # ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # RUN echo Content of env.yaml
 # RUN cat /tmp/env.yaml
