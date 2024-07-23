@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-#    tags:
-#      - 'v*'
-#      - ''
   workflow_dispatch:
     inputs:
       tag:
@@ -14,7 +11,9 @@ on:
         required: true
         default: 'latest'
 
-# env:
+env:
+ IMAGE_NAME: "aih-pandoc"
+ IMAGE_TAG: "latest"
 #  IMAGE_NAME: "aih-pandoc"
 #  MICROMAMBA_VERSION: "1.5.8"
 #  ENVIRONMENT_FILE: "env.yaml"
@@ -35,8 +34,8 @@ jobs:
 
       - name: Check out the repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+        # with:
+        #  ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -68,7 +67,7 @@ jobs:
             echo "LUA_VERSION=${LUA_VERSION}" >> $GITHUB_ENV
             echo "PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION}" >> $GITHUB_ENV
           else
-            echo "Settings file for version $TAG_NAME not found"
+            echo "Settings file $VERSION_FILE not found"
             exit 1
           fi
 
