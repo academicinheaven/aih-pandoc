@@ -1,7 +1,7 @@
 # Dockerfile for pandoc, pandoc-crossref, and pandoc-plot
 # based on https://github.com/pandoc/dockerfiles
 
-ARG MICROMAMBA_VERSION=latest
+ARG MICROMAMBA_VERSION="1.5.8"
 ARG ENVIRONMENT_FILE="env.yaml"
 ARG BASE_IMAGE=mambaorg/micromamba
 # Platform is used for URIs of binaries, mainly Pandoc
@@ -17,6 +17,8 @@ ARG PANDOC_PLOT_VERSION=1.8.0
 # Stage 1: Patched version of Micromamba / Debian
 # FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION}
+
+
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
