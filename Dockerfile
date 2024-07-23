@@ -30,7 +30,7 @@ ARG ENVIRONMENT_FILE
 USER root
 RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 # Back to the micromamba shell
-# SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
+SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
 RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
 COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
