@@ -47,7 +47,7 @@ jobs:
         with:
           load: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:test
-          platforms: linux/amd64
+          # platforms: linux/amd64
           #, linux/arm64
           # platforms: linux/arm64, 
           build-args: |
@@ -64,9 +64,17 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
           # , linux/arm64
           # platforms: linux/arm64, linux/amd64
+          build-args: |
+            MICROMAMBA_VERSION=${{ env.MICROMAMBA_VERSION }}
+            ENVIRONMENT_FILE=${{ env.ENVIRONMENT_FILE }}
+            PANDOC_VERSION=${{ env.PANDOC_VERSION }}
+            PANDOC_CLI_VERSION=${{ env.PANDOC_CLI_VERSION }}
+            PANDOC_CROSSREF_VERSION=${{ env.PANDOC_CROSSREF_VERSION }}
+            LUA_VERSION=${{ env.LUA_VERSION }}
+            PANDOC_PLOT_VERSION=${{ env.PANDOC_PLOT_VERSION }}          
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:final
 
