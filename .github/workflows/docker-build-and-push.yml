@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build Docker Image
 
 on:
   push:
@@ -8,34 +8,62 @@ on:
     branches:
       - main
 
+# Load from versions.txt later on
+# Or do this in the docker file
+env:
+  MICROMAMBA_VERSION: "1.5.8"
+  ENVIRONMENT_FILE: "env.yaml"
+  PANDOC_VERSION: "3.2"
+  PANDOC_CLI_VERSION: "3.2"
+  PANDOC_CROSSREF_VERSION: "0.3.17.1"
+  LUA_VERSION: "5.4"
+  PANDOC_PLOT_VERSION: "1.8.0"
+  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:test
+  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:final  
+
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
 
- #     - name: Log in to Docker Hub
- #       uses: docker/login-action@v2
- #       with:
- #         username: ${{ secrets.DOCKER_USERNAME }}
- #         password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker images for arm64
-        env:
-          PLATFORM: arm64
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          tags: ${{ env.TEST_TAG }}
+          platforms: linux/arm64
+          # platforms: linux/arm64, linux/amd64
+          build-args: |
+            MICROMAMBA_VERSION=$MICROMAMBA_VERSION
+            ENVIRONMENT_FILE=$ENVIRONMENT_FILE
+            PANDOC_VERSION=$PANDOC_VERSION
+            PANDOC_CLI_VERSION=$PANDOC_CLI_VERSION
+            PANDOC_CROSSREF_VERSION=$PANDOC_CROSSREF_VERSION
+            LUA_VERSION=$LUA_VERSION
+            PANDOC_PLOT_VERSION=$PANDOC_PLOT_VERSION
+      - name: Test
         run: |
-          export PLATFORM=arm64
-          ./build.sh
-          ./build.sh test
-#          ./build.sh push
+          docker run --rm ${{ env.TEST_TAG }} /bin/bash ./run_tests.sh
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/arm64
+          # platforms: linux/arm64, linux/amd64
+          push: true
+          tags: ${{ env.LATEST_TAG }}
 
-      - name: Build and push Docker images for amd64
-        env:
-          PLATFORM: amd64
-        run: |
-          export PLATFORM=amd64
-          ./build.sh
-          ./build.sh test
-#          ./build.sh push
+
