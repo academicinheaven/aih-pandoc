@@ -34,9 +34,10 @@ RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 USER $MAMBA_USER
 RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
 COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
-COPY --chown=$MAMBA_USER:$MAMBA_USER tests/ ./
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 WORKDIR /usr/aih/data/src
+COPY --chown=$MAMBA_USER:$MAMBA_USER tests/ ./
+RUN ls .
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
