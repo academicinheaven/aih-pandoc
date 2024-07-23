@@ -71,13 +71,13 @@ jobs:
             echo "Settings file $VERSION_FILE not found"
             exit 1
           fi
-          echo ${{ secrets.DOCKER_HUB_USERNAME }}/{{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          echo ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Build and export to Docker
         uses: docker/build-push-action@v6
         with:
           load: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/{{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           platforms: linux/amd64
           # test just on amd64 for the moment
           # ,linux/arm64
@@ -107,4 +107,4 @@ jobs:
             LUA_VERSION=${{ env.LUA_VERSION }}
             PANDOC_PLOT_VERSION=${{ env.PANDOC_PLOT_VERSION }}          
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/{{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
