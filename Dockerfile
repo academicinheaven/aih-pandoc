@@ -31,14 +31,13 @@ ARG PANDOC_PLOT_VERSION
 # TODO: Check
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER root
-# RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 # Back to the micromamba shell
 # SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
-RUN echo --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE
-RUN cat $ENVIRONMENT_FILE
-COPY --chown=$MAMBA_USER:$MAMBA_USER $ENVIRONMENT_FILE /tmp/env.yaml
+RUN echo --chown=$MAMBA_USER:$MAMBA_USER ${ENVIRONMENT_FILE}
+RUN cat ${ENVIRONMENT_FILE}
+COPY --chown=$MAMBA_USER:$MAMBA_USER ${ENVIRONMENT_FILE} /tmp/env.yaml
 RUN ls -la .
 RUN cat /tmp/env.yaml
 # ARG MAMBA_DOCKERFILE_ACTIVATE=1
@@ -47,7 +46,7 @@ RUN cat /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 WORKDIR /usr/aih/data/src
-COPY --chown=$MAMBA_USER:$MAMBA_USER tests/ ./
+COPY --chown=${MAMBA_USER}:${MAMBA_USER} tests/ ./
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN ls .
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
