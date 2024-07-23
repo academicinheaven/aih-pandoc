@@ -59,7 +59,7 @@ jobs:
             PANDOC_PLOT_VERSION=${{ env.PANDOC_PLOT_VERSION }}
       - name: Test
         run: |
-          docker run --rm ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:test /bin/bash ./run_tests.sh
+          docker run --rm ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:test /bin/bash ./tests/run_tests.sh
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
