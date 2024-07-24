@@ -120,10 +120,11 @@ Commands(s):
 7. Try to build and test the updated combinations.
 8. If successful, produce a release:
   - Copy  `versions.txt` to `versions_x.y.z.txt` 
-  - Add a release note tot README.md (currently manual)
-  - Create an env.yaml.lock file for the Micromamba components
+  - Export `env_x.y.z.yaml.lock` for the Micromamba components and PIP (this is currently not needed in this component of Academic in Heaven, but we aim at a unified approach.)
+  - Add a release note to README.md (currently manual)
   - Create a release on Github (currently manual)
 
+**Note:** We do not track the Haskell/Cabal versions for the build environment and rely on Debian for stability here.
 
  ## Releases
 
