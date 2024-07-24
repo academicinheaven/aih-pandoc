@@ -1,6 +1,6 @@
 # Pandoc Image for Academic in Heaven
 
-This is an image with Pandoc and core Pandoc components on the basis of the `mambaorg/micromamba` image, which itself is (currently) based on Debian `bookwork-slim`. 
+This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the `mambaorg/micromamba` image, which itself is (currently) based on Debian `bookwork-slim` for the [Academic in Heaven](https://github.com/academicinheaven) project.
 
 As [Academic in Heaven](https://github.com/academicinheaven) is based on `micromamba` and 
 
@@ -8,7 +8,7 @@ As [Academic in Heaven](https://github.com/academicinheaven) is based on `microm
 and
 2. core Pandoc components like `pandoc-plot` need to be built with the same Pandoc version,
 
-we build Pandoc and all required components components from their Haskell packages from their sources from the Haskell package repository [**Hackage**](https://hackage.haskell.org/) via [`cabal-install`](https://hackage.haskell.org/package/cabal-install).
+we build Pandoc and all required components components from the Haskell package repository [**Hackage**](https://hackage.haskell.org/) via [`cabal-install`](https://hackage.haskell.org/package/cabal-install).
 
 As this is is a lengthy process (30 minutes and more), we keep this process separate from the core Academic in Heaven images.
 
@@ -22,16 +22,15 @@ As this is is a lengthy process (30 minutes and more), we keep this process sepa
 4. [`pandoc-crossref`](https://hackage.haskell.org/package/pandoc-crossref)
 5. [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
 
-
 ## Usage
 
 ```bash
-docker run --rm mfhepp/aih-pandoc:3.2 /bin/bash -c "pandoc --version"
 docker run --rm mfhepp/aih-pandoc:latest /bin/bash -c "pandoc --version"
+docker run --rm mfhepp/aih-pandoc:3.2 /bin/bash -c "pandoc --version"
 ```
 
-
 ## Releases and Tags
+
 The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** 
 
 | Tag / Release | Pandoc version | Image tag on Docker Hub |
@@ -40,64 +39,37 @@ The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `
 | v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
 
 The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release will be in in 
-`freeze/<version>`.
+`freeze/<version>/versions.txt`.
 
 ## Build
 
-### Build via Github Action
-
-A new image will be built and pushed to Docker Hub 
-
-- for each commit to `main`
-- for each commit with a tag like `v*.*.*`
-
-**Important:** The digest part of the Docker Hub image will be determined by `IMAGE_NAME` in `versions.txt`. 
-
-You can also trigger a **manual build and push workflow** like so:
-
-```bash
-# Trigger for the current main branch (latest commit):
-gh workflow run 'Build Docker Image' --ref main
-
-gh workflow run docker-build-and-push-osx-m1.yml --ref main
-
-# Trigger for a specific branch (e.g., feature-branch):
-gh workflow run 'Build Docker Image' --ref feature-branch
-
-# Trigger for a specific tag (e.g., v1.2.3):
-gh workflow run 'Build Docker Image' --ref v1.2.3
-
-# Check status
-gh run list --workflow=docker-build-and-push.yml
-```
-
 ### Local Build and Push
 
-You can also build the image locally with `build.sh`.
-
-This is particularly useful for development and experiments.
-
-**Warnings:** 
-1. You can overwrite an existing image on  Docker Hub.
-2. This is work-in-progress. The Github workflow is now the default mechanism.
-
-#### Build development image from `versions-dev.txt``
+The preferred way of building the images for Apple silicon is to use `build.sh` on an Apple M1 machine. You need Docker Desktop installed.
 
 ```bash
-./build.sh dev
-```
-
-```bash
-# Builds the Docker image from the Dockerfile
-Usage: ./build.sh [ dev | update | freeze | push ]
+Usage: ./build.sh [ --help ] [ test | push | freeze | update ]
 
 Commands(s):
-  dev: Build development image (create mh/aih-pandoc:dev)
-  freeze: Update env.yaml.lock and ignore Docker cache
-  push: Push Docker image to repository
-  test: Run tests
-  update: Force fresh build, ignoring cached build stages and versions from lock (will e.g. update Python packages)
-  ```
+  (none): Build image
+  test:   Run tests
+  push:   Push Docker image to repository
+  freeze: Create version folder and freeze version.txt and env.yaml.lock
+  update: Update submodules and external files
+```
+
+Here is the process:
+
+1. Make sure that `IMAGE_TAG` in `version.txt` is set properly; it will also determine the tag on Docker Hub.
+2. Update all dependencies with `./build.sh update`.
+3. Edit `versions.txt` as needed.
+2. Build and test with `./build.sh` from a branch of your choice.
+3. Freeze all components with `./build.sh freeze`.
+4. Edit `README.md`.
+5. Add a tag / release.
+6. Commit / push to Github.
+7. Push to Docker Hub with `./build.sh push`.
+
 
 ## Updating
 
@@ -108,10 +80,10 @@ Commands(s):
   - [`pandoc-cli`](https://hackage.haskell.org/package/pandoc-cli)
   - [`pandoc-crossref`](https://hackage.haskell.org/package/pandoc-crossref)
   - [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
-3. Make sure `versions_x.y.z.txt` exists for the current version. If not, create it.
+3. Make sure `freeze/x.y.z/versions.txt` exists for the current version. If not, create it with `./build.sh freeze`.
 4. Create a new branch: `git checkout -b update_to_pandoc_x.y.z`
 5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**.
-6. Update all Git submodules
+6. Update all Git submodules  and other files with  `./build.sh update`. This essentially does the following:
 ```bash
 # Update git submodules
    git submodule update --init --recursive
@@ -121,24 +93,22 @@ Commands(s):
    git pull           # Pull the latest changes
    cd ..
    # staging / commit / push will be up to the developer
-   ```   
-   7. Update the `seccomp` profile
-```bash
    # Fetching the latest seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
    curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json
 ```
-7. Try to build and test the updated combinations.
+7. Try to build and test the updated combinations with `./build.sh`
 8. If successful, produce a release:
-  - Copy  `versions.txt` to `versions_x.y.z.txt` 
-  - Export `env_x.y.z.yaml.lock` for the Micromamba components and PIP (this is currently not needed in this component of Academic in Heaven, but we aim at a unified approach.)
+  - Run  `./build.sh freeze`; this will create  a new folder in `freeze` and copy `versions.txt` and `env.yaml.lock`.
+  - Support for `pip` is currently missing. (this is  not needed in this component of Academic in Heaven, but we aim at a unified approach.)
   - Add a release note to README.md (currently manual)
   - Create a release on Github (currently manual)
-9. Currently manually: Attach the `latest` tag to the latest version
+9. Commit, add a tag, and push to Github.
+10. Currently manually: Attach the `latest` tag to the latest version
 ```bash
 docker login
-docker pull user/repo:3.2
-docker tag user/repo:3.2 user/repo:latest
-docker push user/repo:latest
+docker pull mfhepp/aih-pandoc:3.2
+docker tag mfhepp/aih-pandoc:3.2 mfhepp/aih-pandoc:latest
+docker push mfhepp/aih-pandoc:latest
 ```
 
 **Note:** We do not track the Haskell/Cabal versions for the build environment and rely on Debian for stability here.
