@@ -1,6 +1,4 @@
 #!/bin/bash
-echo Skipping all tests
-exit 0
 
 # Check if pandoc is installed
 if ! command -v pandoc &> /dev/null; then
