@@ -100,20 +100,16 @@ COPY dockerfiles/cabal.root.config /root/.cabal/config
 # TBD: Add version specs!
 # -fembed_data_files is critical to make the resulting binary self-contained
 # https://pandoc.org/installing.html#creating-a-relocatable-binary
-# ##### TEST
 RUN cabal --version \
   && ghc --version \
-  && cabal v2-update 
-# ##### TEST
-
-#  && cabal v2-install --install-method=copy \
-#  pandoc-${PANDOC_VERSION} \
-#  pandoc-cli-${PANDOC_CLI_VERSION} \
-#  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
-#  pandoc-plot-${PANDOC_PLOT_VERSION} \
-#  -fembed_data_files
-
-# The Pandoc dockerfiles use cabal build:
+  && cabal v2-update \
+  && cabal v2-install --install-method=copy \
+  pandoc-${PANDOC_VERSION} \
+  pandoc-cli-${PANDOC_CLI_VERSION} \
+  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
+  pandoc-plot-${PANDOC_PLOT_VERSION} \
+  -fembed_data_files
+# Note: The Pandoc dockerfiles use cabal build:
 # Build pandoc and pandoc-crossref. The `allow-newer` is required for
 # when pandoc-crossref has not been updated yet, but we want to build
 # anyway.
@@ -139,15 +135,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 # Copy Pandoc, pandoc-cli, pandoc-crossref, and pandoc-plot from previous stage
-# ##### TEST
+COPY --from=pandoc_binaries \
+  /root/.cabal/bin \
+  /usr/local/bin
 
-# COPY --from=pandoc_binaries \
-#  /root/.cabal/bin \
-#  /usr/local/bin
-# ##### TEST
-
-  # TODO:
-# Add pandoc symlinks and install runtime dependencies
+# TODO:
+# Maybe add pandoc symlinks and install runtime dependencies
 # RUN ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-lua \
 #  && ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-server \
 RUN apt-get --no-allow-insecure-repositories update \
@@ -180,5 +173,5 @@ RUN micromamba install -y -n base -f /tmp/env.yaml && \
 WORKDIR /usr/aih/data/src
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} tests tests
-RUN ls -la tests
+# RUN ls -la tests
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
