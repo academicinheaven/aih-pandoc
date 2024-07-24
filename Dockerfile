@@ -175,6 +175,6 @@ COPY --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE} /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 WORKDIR /usr/aih/data/src
-COPY --chown=${MAMBA_USER}:${MAMBA_USER} tests/ ./
+COPY --chown=${MAMBA_USER}:${MAMBA_USER} tests .
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
