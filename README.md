@@ -59,6 +59,8 @@ You can also trigger a **manual build and push workflow** like so:
 # Trigger for the current main branch (latest commit):
 gh workflow run 'Build Docker Image' --ref main
 
+gh run --workflow=docker-build-and-push-osx-m1.yml --ref main
+
 # Trigger for a specific branch (e.g., feature-branch):
 gh workflow run 'Build Docker Image' --ref feature-branch
 
