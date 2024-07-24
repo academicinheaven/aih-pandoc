@@ -23,6 +23,14 @@ As this is is a lengthy process (30 minutes and more), we keep this process sepa
 5. [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
 
 
+## Usage
+
+```bash
+docker run --rm mfhepp/aih-pandoc:3.2 /bin/bash -c "pandoc --version"
+docker run --rm mfhepp/aih-pandoc:latest /bin/bash -c "pandoc --version"
+```
+
+
 ## Releases and Tags
 The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** 
 
@@ -123,6 +131,13 @@ Commands(s):
   - Export `env_x.y.z.yaml.lock` for the Micromamba components and PIP (this is currently not needed in this component of Academic in Heaven, but we aim at a unified approach.)
   - Add a release note to README.md (currently manual)
   - Create a release on Github (currently manual)
+9. Currently manually: Attach the `latest` tag to the latest version
+```bash
+docker login
+docker pull user/repo:3.2
+docker tag user/repo:3.2 user/repo:latest
+docker push user/repo:latest
+```
 
 **Note:** We do not track the Haskell/Cabal versions for the build environment and rely on Debian for stability here.
 
