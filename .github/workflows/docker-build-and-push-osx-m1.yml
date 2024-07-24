@@ -17,7 +17,8 @@ env:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # macos-latest lacks docker, unfortunately
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository
@@ -28,7 +29,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: all
+          platforms: linux/arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
