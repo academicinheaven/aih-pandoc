@@ -101,6 +101,7 @@ COPY cabal.root.config /root/.cabal/config
 RUN cabal --version \
   && ghc --version \
   && cabal v2-update 
+# ##### TEST
 
 #  && cabal v2-install --install-method=copy \
 #  pandoc-${PANDOC_VERSION} \
@@ -135,10 +136,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 # Copy Pandoc, pandoc-cli, pandoc-crossref, and pandoc-plot from previous stage
-COPY --from=pandoc_binaries \
-  /root/.cabal/bin \
-  /usr/local/bin
-# TODO:
+# ##### TEST
+
+# COPY --from=pandoc_binaries \
+#  /root/.cabal/bin \
+#  /usr/local/bin
+# ##### TEST
+
+  # TODO:
 # Add pandoc symlinks and install runtime dependencies
 # RUN ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-lua \
 #  && ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-server \
