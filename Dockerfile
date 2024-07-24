@@ -1,21 +1,24 @@
 # Dockerfile for pandoc, pandoc-crossref, and pandoc-plot
 # based on https://github.com/pandoc/dockerfiles
-
+ARG BUILDPLATFORM=linux/arm64
 ARG MICROMAMBA_VERSION=latest
 ARG ENVIRONMENT_FILE=env.yaml
 ARG BASE_IMAGE=mambaorg/micromamba
 # Platform is used for URIs of binaries, mainly Pandoc
 # Use ARG PLATFORM=amd64 for Intel (not tested)
-ARG PLATFORM=arm64
+# This is currently not used
+# ARG PLATFORM=arm64
 ARG LUA_VERSION=5.4
-# The core Pandoc components need to be compatible
+# The core Pandoc components need to be mutually compatible
+# This is now set by versions.txt, these are just defaults
+# TBD: Change to latest.
 ARG PANDOC_VERSION=3.2
 ARG PANDOC_CLI_VERSION=3.2
 ARG PANDOC_CROSSREF_VERSION=0.3.17.1
 ARG PANDOC_PLOT_VERSION=1.8.0
 
 # Stage 1: Patched version of Micromamba / Debian
-FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} as micromamba_patched
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
@@ -37,7 +40,7 @@ ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 # Build pandoc, pandoc-cli, pandoc-crossref and pandoc-plot for debian-bookworm and arm64
 # In multiple steps for performance reasons
 # https://github.com/lierdakil/pandoc-crossref#building-from-hackage-with-cabal-install
-FROM micromamba_patched as haskell_build
+FROM micromamba_patched AS haskell_build
 ARG LUA_VERSION
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
@@ -128,7 +131,7 @@ ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 
 # Stage 4: Copy into fresh micromamba-patched (or aih-texlive)
 # FROM micromamba_patched as aih-pandoc
-FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} as aih-pandoc
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS aih-pandoc
 ARG LUA_VERSION
 ARG ENVIRONMENT_FILE
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
