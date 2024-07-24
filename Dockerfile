@@ -38,7 +38,7 @@ USER $MAMBA_USER
 #RUN echo --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE}
 #RUN cat ${ENVIRONMENT_FILE}
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE} /tmp/env.yaml
-RUN ls -la .
+RUN ls -la . 
 RUN cat /tmp/env.yaml
 # ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # RUN echo Content of env.yaml
