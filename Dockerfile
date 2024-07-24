@@ -97,15 +97,18 @@ COPY cabal.root.config /root/.cabal/config
 # TBD: Add version specs!
 # -fembed_data_files is critical to make the resulting binary self-contained
 # https://pandoc.org/installing.html#creating-a-relocatable-binary
+# ##### TEST
 RUN cabal --version \
   && ghc --version \
-  && cabal v2-update \
-  && cabal v2-install --install-method=copy \
-  pandoc-${PANDOC_VERSION} \
-  pandoc-cli-${PANDOC_CLI_VERSION} \
-  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
-  pandoc-plot-${PANDOC_PLOT_VERSION} \
-  -fembed_data_files
+  && cabal v2-update 
+
+#  && cabal v2-install --install-method=copy \
+#  pandoc-${PANDOC_VERSION} \
+#  pandoc-cli-${PANDOC_CLI_VERSION} \
+#  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
+#  pandoc-plot-${PANDOC_PLOT_VERSION} \
+#  -fembed_data_files
+
 # The Pandoc dockerfiles use cabal build:
 # Build pandoc and pandoc-crossref. The `allow-newer` is required for
 # when pandoc-crossref has not been updated yet, but we want to build

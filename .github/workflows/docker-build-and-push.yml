@@ -4,27 +4,16 @@ on:
   push:
     branches:
       - main
+      - 'refs/tags/v*.*.*'
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to build (e.g., v1.2.3 or latest)'
         required: true
-        default: 'latest'
+        default: ''
 
 env:
- IMAGE_NAME: "aih-pandoc"
- IMAGE_TAG: "latest"
-#  IMAGE_NAME: "aih-pandoc"
-#  MICROMAMBA_VERSION: "1.5.8"
-#  ENVIRONMENT_FILE: "env.yaml"
-#  PANDOC_VERSION: "3.2"
-#  PANDOC_CLI_VERSION: "3.2"
-#  PANDOC_CROSSREF_VERSION: "0.3.17.1"
-#  LUA_VERSION: "5.4"
-#  PANDOC_PLOT_VERSION: "1.8.0"
-#  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}  
-#  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:test
-#  LATEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/aih-pandoc:final  
+  IMAGE_NAME: "aih-pandoc"
 
 jobs:
   build:
@@ -34,8 +23,8 @@ jobs:
 
       - name: Check out the repository
         uses: actions/checkout@v4
-        # with:
-        #  ref: ${{ github.event.inputs.tag || github.ref }}
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag == '' ? 'main' : github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -72,7 +61,13 @@ jobs:
             echo "Settings file $VERSION_FILE not found"
             exit 1
           fi
-          echo ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.tag }}" == "" ]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          fi
 
       - name: Build and export to Docker
         uses: docker/build-push-action@v6
@@ -80,8 +75,6 @@ jobs:
           load: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           platforms: linux/amd64
-          # test just on amd64 for the moment
-          # ,linux/arm64
           build-args: |
             MICROMAMBA_VERSION=${{ env.MICROMAMBA_VERSION }}
             ENVIRONMENT_FILE=${{ env.ENVIRONMENT_FILE }}
