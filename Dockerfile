@@ -105,13 +105,17 @@ COPY dockerfiles/cabal.root.config /root/.cabal/config
 # https://pandoc.org/installing.html#creating-a-relocatable-binary
 RUN cabal --version \
   && ghc --version \
-  && cabal v2-update \
-  && cabal v2-install --install-method=copy \
-  pandoc-${PANDOC_VERSION} \
-  pandoc-cli-${PANDOC_CLI_VERSION} \
-  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
-  pandoc-plot-${PANDOC_PLOT_VERSION} \
-  -fembed_data_files
+  && cabal v2-update 
+
+
+# DEBUG
+#  && cabal v2-install --install-method=copy \
+#  pandoc-${PANDOC_VERSION} \
+#  pandoc-cli-${PANDOC_CLI_VERSION} \
+#  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
+#  pandoc-plot-${PANDOC_PLOT_VERSION} \
+#  -fembed_data_files
+
 # Note: The Pandoc dockerfiles use cabal build:
 # Build pandoc and pandoc-crossref. The `allow-newer` is required for
 # when pandoc-crossref has not been updated yet, but we want to build
@@ -137,10 +141,12 @@ ARG ENVIRONMENT_FILE
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
+
+# DEBUG
 # Copy Pandoc, pandoc-cli, pandoc-crossref, and pandoc-plot from previous stage
-COPY --from=pandoc_binaries \
-  /root/.cabal/bin \
-  /usr/local/bin
+#COPY --from=pandoc_binaries \
+#  /root/.cabal/bin \
+#  /usr/local/bin
 
 # TODO:
 # Maybe add pandoc symlinks and install runtime dependencies

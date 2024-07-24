@@ -12,25 +12,19 @@ PLATFORM="linux/arm64"
 ENVIRONMENT_FILE="env.yaml.lock"
 DEVELOPMENT_IMAGE="false"
 
-# Load settings from version.txt
-if [[ -s "$SOURCEFILE" ]]; then
-   echo Loading version information from "$SOURCEFILE".
-   source $SOURCEFILE
-else
-   echo "ERROR: $SOURCEFILE missing."
-   return 1
-fi 
 
 usage ()
 {
-    printf 'Builds the Docker image from the Dockerfile\n'
-    printf 'Usage: %s [ --help ] [ update | freeze | push ]\n\n' "$0"
+    printf '\nBuilds the Docker image from the Dockerfile\n\n'
+    printf 'Usage: %s [ --help ] [ test | push | freeze | update ]\n\n' "$0"
     printf 'Commands(s):\n'
-    printf '  freeze: Update env.yaml.lock, ignore Docker cache, and copy version.txt\n'
-    printf '  push: Push Docker image to repository\n'
-    printf '  test: Run tests\n'
-    printf '  update: Force fresh build, ignoring cached build stages and versions from lock (will e.g. update Python packages)\n'   
+    printf '  (none): Build image\n'   
+    printf '  test:   Run tests\n'
+    printf '  push:   Push Docker image to repository\n'
+    printf '  freeze: Create version folder and freeze version.txt and env.yaml.lock\n'
+    printf '  update: Update submodules and external files\n'   
 }
+
 
 build ()
 {
@@ -103,7 +97,7 @@ run_tests () {
     /bin/bash ./run_tests.sh "$@"
     EXIT_CODE=$?
     if [[ $EXIT_CODE -ne 0 ]]; then
-      echo "FAILED: One or more tests failed."
+      echo "FAILED: One or more tests failed or image is not available."
     else
       echo "PASSED: All tests passed."
     fi
@@ -115,15 +109,15 @@ update ()
 {
    echo Updating submodules and other components
    # Update git submodules
-   git submodule update --init --recursive
-   cd dockerfiles
-   git fetch
-   git checkout main  # Replace 'main' with the branch you are tracking
-   git pull           # Pull the latest changes
+   git submodule update --init --recursive || return 1
+   cd dockerfiles || return 1
+   git fetch || return 1
+   git checkout main  || return 1 # Replace 'main' with the branch you are tracking
+   git pull          || return 1 # Pull the latest changes
    cd ..
    # Update Seccomp profile
    echo Updating the seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
-   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json
+   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json || return 1
    # PARAMETERS="--no-cache"
    # ENVIRONMENT_FILE="env.yaml"
    echo "Note: env.yaml.lock will not be overwritten (use ./build.sh freeze for this)" 
@@ -132,16 +126,17 @@ update ()
    return 0
 }
 
+
 freeze () {
    mkdir -p freeze/${IMAGE_TAG}
    echo Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}
-   cp ${SOURCEFILE} freeze/${IMAGE_TAG}/${SOURCEFILE}
+   cp ${SOURCEFILE} freeze/${IMAGE_TAG}/${SOURCEFILE} || return 1
    # Check if ENVIRONMENT_FILE ends with .lock or .yaml
    if [[ "$ENVIRONMENT_FILE" == *.lock ]]; then
       echo "Updating $ENVIRONMENT_FILE."
-      cp ${ENVIRONMENT_FILE} ${ENVIRONMENT_FILE}.old
+      cp ${ENVIRONMENT_FILE} ${ENVIRONMENT_FILE}.old || return 1
    elif [[ "$ENVIRONMENT_FILE" == *.yaml ]]; then
-      echo "Creating $NEW_ENVIRONMENT_FILE.lock for $ENVIRONMENT_FILE"
+      echo "Creating $ENVIRONMENT_FILE.lock for $ENVIRONMENT_FILE"
       ENVIRONMENT_FILE="${ENVIRONMENT_FILE}.lock" 
    else
       echo "ERROR: $ENVIRONMENT_FILE does not end with .lock or .yaml"
@@ -155,22 +150,26 @@ freeze () {
       --rm \
       "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
       micromamba env export -n base > ${ENVIRONMENT_FILE}
-   echo Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}
+   if [[ $? -ne 0 ]]; then
+      return $?
+   fi
+   echo Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE} 
    cp ${ENVIRONMENT_FILE} freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}
-      if [ -s "${ENVIRONMENT_FILE}.old" ]; then
-         echo Updated packages:
-         echo "=== NEW env.yaml.lock === | === PREVIOUS env.yaml.lock ==="
-         diff -y --suppress-common-lines "${ENVIRONMENT_FILE}" "${ENVIRONMENT_FILE}.old" > yaml.lock.diff.txt
-         # Check the exit status of the diff command
-         if [[ $? -eq 0 ]]; then
-            echo "No changes"
-         else
-            cat yaml.lock.diff.txt
-         fi
-         rm -f yaml.lock.diff.txt
+   if [ -s "${ENVIRONMENT_FILE}.old" ]; then
+      echo Updated packages:
+      echo "=== NEW env.yaml.lock === | === PREVIOUS env.yaml.lock ==="
+      diff -y --suppress-common-lines "${ENVIRONMENT_FILE}" "${ENVIRONMENT_FILE}.old" > yaml.lock.diff.txt
+      # Check the exit status of the diff command
+      if [[ $? -eq 0 ]]; then
+         echo "No changes"
+      else
+         cat yaml.lock.diff.txt
       fi
+      rm -f yaml.lock.diff.txt
+   fi
    return 0
 }
+
 
 push_to_hub () {
   echo Pushing image "$IMAGE_NAME:$IMAGE_TAG" to "$DOCKER_HUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG" on Docker Hub
@@ -181,14 +180,19 @@ push_to_hub () {
 }
 
 
+# Load settings from version.txt
+if [[ -s "$SOURCEFILE" ]]; then
+   echo Loading version information from "$SOURCEFILE".
+   source $SOURCEFILE
+else
+   echo "ERROR: $SOURCEFILE missing."
+   return 1
+fi 
 if [[ "$1" == "--help" ]]; then
    usage
    exit 0
 elif [[ $# -eq 0 || -z "$1" ]]; then
    build
-   exit $?
-elif [[ "$1" == "--dev" ]]; then
-   build_development_image
    exit $?
 elif [[ "$1" == "freeze" ]]; then
    freeze
