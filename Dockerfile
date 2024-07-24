@@ -1,6 +1,6 @@
 # Dockerfile for pandoc, pandoc-crossref, and pandoc-plot
 # based on https://github.com/pandoc/dockerfiles
-ARG BUILDPLATFORM=linux/arm64
+ARG BUILDPLATFORM
 ARG MICROMAMBA_VERSION=latest
 ARG ENVIRONMENT_FILE=env.yaml
 ARG BASE_IMAGE=mambaorg/micromamba
