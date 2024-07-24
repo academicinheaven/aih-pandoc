@@ -67,7 +67,15 @@ You can also build the image locally with `build.sh`.
 
 This is particularly useful for development and experiments.
 
-**Warning:** You can overwrite an existing image on  Docker Hub.
+**Warnings:** 
+1. You can overwrite an existing image on  Docker Hub.
+2. This is work-in-progress. The Github workflow is now the default mechanism.
+
+#### Build development image from `versions-dev.txt``
+
+```bash
+./build.sh dev
+```
 
 ```bash
 # Builds the Docker image from the Dockerfile
@@ -80,3 +88,52 @@ Commands(s):
   test: Run tests
   update: Force fresh build, ignoring cached build stages and versions from lock (will e.g. update Python packages)
   ```
+
+## Updating
+
+1. Check latest versions for
+  - [`micromamba-docker`](https://github.com/mamba-org/micromamba-docker/releases/)
+  - [`pandoc`](https://hackage.haskell.org/package/pandoc)
+2. Check if all Pandoc components on Hackage are compatible with the latest Pandoc version
+  - [`pandoc-cli`](https://hackage.haskell.org/package/pandoc-cli)
+  - [`pandoc-crossref`](https://hackage.haskell.org/package/pandoc-crossref)
+  - [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
+3. Make sure `versions_x.y.z.txt` exists for the current version. If not, create it.
+4. Create a new branch: `git checkout -b update_to_pandoc_x.y.z`
+5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**.
+6. Update all Git submodules
+```bash
+# Update git submodules
+   git submodule update --init --recursive
+   cd dockerfiles
+   git fetch
+   git checkout main  # Replace 'main' with the branch you are tracking
+   git pull           # Pull the latest changes
+   cd ..
+   # staging / commit / push will be up to the developer
+   ```   
+   7. Update the `seccomp` profile
+```bash
+   # Fetching the latest seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
+   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json
+```
+7. Try to build and test the updated combinations.
+8. If successful, produce a release:
+  - Copy  `versions.txt` to `versions_x.y.z.txt` 
+  - Add a release note tot README.md (currently manual)
+  - Create an env.yaml.lock file for the Micromamba components
+  - Create a release on Github (currently manual)
+
+
+ ## Releases
+
+ ### v3.2
+
+```
+MICROMAMBA_VERSION=1.5.8
+PANDOC_VERSION=3.2
+PANDOC_CLI_VERSION=3.2
+PANDOC_CROSSREF_VERSION=0.3.17.1
+LUA_VERSION=5.4
+PANDOC_PLOT_VERSION=1.8.0
+```

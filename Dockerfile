@@ -90,9 +90,12 @@ RUN echo "PANDOC_VERSION=${PANDOC_VERSION}" \
   && echo "PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION}"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER root
+# OLD, will be removed
 # This will be copied from the git submodule and updated via 
 # ./build.sh update
-COPY cabal.root.config /root/.cabal/config
+# COPY cabal.root.config /root/.cabal/config
+# We copy directly from the submodule
+COPY dockerfiles/cabal.root.config /root/.cabal/config
 # Build pandoc and pandoc-cli
 # TBD: Add version specs!
 # -fembed_data_files is critical to make the resulting binary self-contained

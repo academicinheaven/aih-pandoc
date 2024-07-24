@@ -18,7 +18,6 @@ on:
 
 env:
   IMAGE_NAME: "aih-pandoc"
-  TEST_TAG: "aih-pandoc:test"
 
 jobs:
   build:
@@ -50,10 +49,11 @@ jobs:
           VERSION_FILE="versions.txt"
           if [ -f "$VERSION_FILE" ]; then
             echo "Found settings file $VERSION_FILE"
+            echo DEBUG: Settings from $VERSION_FILE:
+            echo
             cat $VERSION_FILE
             source $VERSION_FILE
             echo "MICROMAMBA_VERSION=${MICROMAMBA_VERSION}" >> $GITHUB_ENV
-            echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
             echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
             echo "ENVIRONMENT_FILE=${ENVIRONMENT_FILE}" >> $GITHUB_ENV
             echo "PANDOC_VERSION=${PANDOC_VERSION}" >> $GITHUB_ENV
@@ -65,13 +65,14 @@ jobs:
             echo "Settings file $VERSION_FILE not found"
             exit 1
           fi
+          # Set the TEST_TAG based on env.IMAGE_NAME
+          echo "TEST_TAG=${{ env.IMAGE_NAME }}:test" >> $GITHUB_ENV
 
       - name: Build and export to Docker
         uses: docker/build-push-action@v6
         with:
           load: true
           tags: ${{ env.TEST_TAG }}
-          # tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           platforms: linux/amd64
           build-args: |
             MICROMAMBA_VERSION=${{ env.MICROMAMBA_VERSION }}
@@ -83,7 +84,6 @@ jobs:
             PANDOC_PLOT_VERSION=${{ env.PANDOC_PLOT_VERSION }}
 
       - name: Test
-      # docker run --rm ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} /bin/bash ./run_tests.sh
         run: |
           docker run --rm ${{ env.TEST_TAG }} /bin/bash -c "cd tests && ./run_tests.sh"
 
