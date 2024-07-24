@@ -1,7 +1,7 @@
 # This is now set in the workflow.yaml
 # IMAGE_NAME="aih-pandoc"
 # The image tag should match the Pandoc version
-IMAGE_TAG="3.2test2"
+IMAGE_TAG="3.2"
 ENVIRONMENT_FILE=env.yaml
 # Latest is 1.5.8
 MICROMAMBA_VERSION=1.5.8

@@ -1,5 +1,5 @@
 #!/bin/bash
-exit 0
+
 # Check if pandoc is installed
 if ! command -v pandoc &> /dev/null; then
     echo "FAILED: pandoc could not be found."
