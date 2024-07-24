@@ -1,6 +1,6 @@
 # Pandoc Image for Academic in Heaven
 
-This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the `mambaorg/micromamba` image, which itself is (currently) based on Debian `bookwork-slim` for the [Academic in Heaven](https://github.com/academicinheaven) project.
+This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the [`mambaorg/micromamba`](https://micromamba-docker.readthedocs.io/en/latest/) image, which itself is (currently) based on Debian `bookwork-slim` for the [Academic in Heaven](https://github.com/academicinheaven) project.
 
 As [Academic in Heaven](https://github.com/academicinheaven) is based on `micromamba` and 
 
@@ -35,8 +35,9 @@ The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `
 
 | Tag / Release | Pandoc version | Image tag on Docker Hub |
 | --- | --- | --- |
-| latest | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
-| v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
+| latest | 3.2.1 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
+| v3.2.1 | 3.2.1 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
+| v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 
 The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release will be in in 
 `freeze/<version>/versions.txt`.
@@ -114,6 +115,17 @@ docker push mfhepp/aih-pandoc:latest
 **Note:** We do not track the Haskell/Cabal versions for the build environment and rely on Debian for stability here.
 
  ## Releases
+
+### v3.2.1
+
+```
+MICROMAMBA_VERSION=1.5.8
+PANDOC_VERSION=3.2.1
+PANDOC_CLI_VERSION=3.2.1
+PANDOC_CROSSREF_VERSION=0.3.17.1
+LUA_VERSION=5.4
+PANDOC_PLOT_VERSION=1.8.0
+```
 
  ### v3.2
 
