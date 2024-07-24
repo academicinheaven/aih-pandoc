@@ -27,6 +27,9 @@ As this is is a lengthy process (30 minutes and more), we keep this process sepa
 ```bash
 docker run --rm mfhepp/aih-pandoc:latest /bin/bash -c "pandoc --version"
 docker run --rm mfhepp/aih-pandoc:3.2 /bin/bash -c "pandoc --version"
+docker run --rm -it --mount type=bind,source="$(pwd)",target=/usr/aih/data/src \
+    mfhepp/aih-pandoc:latest  \
+     /bin/bash
 ```
 
 ## Releases and Tags
