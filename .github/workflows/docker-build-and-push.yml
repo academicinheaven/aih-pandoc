@@ -90,7 +90,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64
+          # , linux/arm64
           build-args: |
             MICROMAMBA_VERSION=${{ env.MICROMAMBA_VERSION }}
             ENVIRONMENT_FILE=${{ env.ENVIRONMENT_FILE }}
