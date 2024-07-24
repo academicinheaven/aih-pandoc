@@ -17,9 +17,9 @@ ARG PANDOC_PLOT_VERSION=1.8.0
 # Stage 1: Patched version of Micromamba / Debian
 # FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION}
-ARG MICROMAMBA_VERSION
+# ARG MICROMAMBA_VERSION
 ARG ENVIRONMENT_FILE
-ARG BASE_IMAGE
+# ARG BASE_IMAGE
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
@@ -38,8 +38,8 @@ USER $MAMBA_USER
 #RUN echo --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE}
 #RUN cat ${ENVIRONMENT_FILE}
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE} /tmp/env.yaml
-RUN ls -la . 
-RUN cat /tmp/env.yaml
+# RUN ls -la . 
+# RUN cat /tmp/env.yaml
 # ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # RUN echo Content of env.yaml
 # RUN cat /tmp/env.yaml
@@ -48,5 +48,5 @@ RUN micromamba install -y -n base -f /tmp/env.yaml && \
 WORKDIR /usr/aih/data/src
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} tests/ ./
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
-RUN ls .
+# RUN ls .
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]

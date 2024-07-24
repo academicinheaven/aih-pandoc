@@ -24,20 +24,26 @@ As this is is a lengthy process (30 minutes and more), we keep this process sepa
 
 
 ## Releases and Tags
-
 The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** 
 
 | Tag / Release | Pandoc version | Image tag on Docker Hub |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- 
-| latest | max(Pandoc) | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
+| --- | --- | --- |
+| latest | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 | v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general)
 
-The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release are in 
+The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release will be in in 
 `freeze/<version>`.
 
 ## Build
 
 ### Build via Github Action
+
+```bash
+gh workflow run 'Build Docker Image' --ref main
+gh workflow run 'Build Docker Image' --ref main -f tag=v3.2
+# Check status
+gh run list --workflow=docker-build-and-push.yml
+```
 
 
 ### Local Build
