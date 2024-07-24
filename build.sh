@@ -53,9 +53,12 @@ build ()
    echo "PANDOC_CROSSREF_VERSION: $PANDOC_CROSSREF_VERSION"
    echo "LUA_VERSION:           $LUA_VERSION"
    echo "PANDOC_PLOT_VERSION:   $PANDOC_PLOT_VERSION"
+   echo "PLATFORM: $PLATFORM"
+   echo
    # Build image
-   docker buildx build --platform ${PLATFORM} ${PARAMETERS} \
+   docker build --platform ${PLATFORM} ${PARAMETERS} \
    --build-arg PLATFORM=${PLATFORM} \
+   --build-arg BUILDPLATFORM=${PLATFORM} \
    --build-arg MICROMAMBA_VERSION=${MICROMAMBA_VERSION} \
    --build-arg PANDOC_VERSION=${PANDOC_VERSION} \
    --build-arg PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION} \
