@@ -38,6 +38,15 @@ The versions for `latest` are stored in [`versions.txt`](versions.txt). The vers
 
 ### Build via Github Action
 
+A new image will be built and pushed to Docker Hub 
+
+- for each commit to `main`
+- for each commit with a tag like `v*.*.*`
+
+**Important:** The digest part of the Docker Hub image will be determined by `IMAGE_NAME` in `versions.txt`. 
+
+You can also trigger a **manual build and push workflow** like so:
+
 ```bash
 # Trigger for the current main branch (latest commit):
 gh workflow run 'Build Docker Image' --ref main
@@ -52,8 +61,13 @@ gh workflow run 'Build Docker Image' --ref v1.2.3
 gh run list --workflow=docker-build-and-push.yml
 ```
 
+### Local Build and Push
 
-### Local Build
+You can also build the image locally with `build.sh`.
+
+This is particularly useful for development and experiments.
+
+**Warning:** You can overwrite an existing image on  Docker Hub.
 
 ```bash
 # Builds the Docker image from the Dockerfile
