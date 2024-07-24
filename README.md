@@ -127,7 +127,7 @@ docker push mfhepp/aih-pandoc:latest
 
 **Note:** We do not track the Haskell/Cabal versions for the build environment and rely on Debian for stability here.
 
- ## Releases
+## Releases
 
 ### v3.2.1
 
@@ -151,10 +151,7 @@ LUA_VERSION=5.4
 PANDOC_PLOT_VERSION=1.8.0
 ```
 
-
 ## License and Acknowledgments
-
-This project is licensed under [GNU General Public License v3.0	(GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 We thankfully acknowledge the following components:
 
@@ -163,4 +160,4 @@ We thankfully acknowledge the following components:
 - [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) under [GPL 2.0](https://github.com/lierdakil/pandoc-crossref/blob/master/LICENSE)
 - [pandoc-dockerfiles](https://github.com/pandoc/dockerfiles) under [GPL 2.0](https://github.com/pandoc/dockerfiles/blob/master/LICENSE)
 - [pandoc-plot](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE) under [GPL 2.0](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE)
-- [`seccomp` profile from the Moby project](https://github.com/moby/moby/tree/master) under [Apache 2.0](https://github.com/moby/moby/blob/master/LICENSE)
+- The [`seccomp` profile from the Moby project](https://github.com/moby/moby/tree/master) under [Apache 2.0](https://github.com/moby/moby/blob/master/LICENSE)
