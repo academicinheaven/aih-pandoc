@@ -39,8 +39,15 @@ The versions for `latest` are stored in [`versions.txt`](versions.txt). The vers
 ### Build via Github Action
 
 ```bash
+# Trigger for the current main branch (latest commit):
 gh workflow run 'Build Docker Image' --ref main
-gh workflow run 'Build Docker Image' --ref main -f tag=v3.2
+
+# Trigger for a specific branch (e.g., feature-branch):
+gh workflow run 'Build Docker Image' --ref feature-branch
+
+# Trigger for a specific tag (e.g., v1.2.3):
+gh workflow run 'Build Docker Image' --ref v1.2.3
+
 # Check status
 gh run list --workflow=docker-build-and-push.yml
 ```
