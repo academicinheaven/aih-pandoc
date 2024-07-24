@@ -120,8 +120,8 @@ Here is the full process:
 10. Currently manually: Attach the `latest` tag to the latest version
 ```bash
 docker login
-docker pull mfhepp/aih-pandoc:3.2
-docker tag mfhepp/aih-pandoc:3.2 mfhepp/aih-pandoc:latest
+docker pull mfhepp/aih-pandoc:3.2.1
+docker tag mfhepp/aih-pandoc:3.2.1 mfhepp/aih-pandoc:latest
 docker push mfhepp/aih-pandoc:latest
 ```
 
@@ -150,3 +150,17 @@ PANDOC_CROSSREF_VERSION=0.3.17.1
 LUA_VERSION=5.4
 PANDOC_PLOT_VERSION=1.8.0
 ```
+
+
+## License and Acknowledgments
+
+This project is licensed under [GNU General Public License v3.0	(GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.txt).
+
+We thankfully acknowledge the following components:
+
+- [Pandoc](https://github.com/jgm/pandoc) under [GPL 2.0 or greater](https://github.com/jgm/pandoc#license)
+- [micromamba-docker](https://github.com/mamba-org/micromamba-docker) under [Apache 2.0](https://github.com/mamba-org/micromamba-docker/blob/main/LICENSE)
+- [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) under [GPL 2.0](https://github.com/lierdakil/pandoc-crossref/blob/master/LICENSE)
+- [pandoc-dockerfiles](https://github.com/pandoc/dockerfiles) under [GPL 2.0](https://github.com/pandoc/dockerfiles/blob/master/LICENSE)
+- [pandoc-plot](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE) under [GPL 2.0](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE)
+- [`seccomp` profile from the Moby project](https://github.com/moby/moby/tree/master) under [Apache 2.0](https://github.com/moby/moby/blob/master/LICENSE)
