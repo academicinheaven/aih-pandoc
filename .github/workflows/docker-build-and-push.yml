@@ -7,8 +7,12 @@ on:
       - 'refs/tags/v*.*.*'
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Tag to build (e.g., v1.2.3 or latest)'
+      branch:
+        description: 'Branch to build (default is main)'
+        required: false
+        default: 'main'
+      commit:
+        description: 'Commit to build (leave empty for the latest commit)'
         required: false
         default: ''
 
@@ -23,7 +27,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' ? github.event.inputs.tag : github.ref }}
+          ref: ${{ github.event.inputs.commit || github.event.inputs.branch || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -59,13 +63,6 @@ jobs:
           else
             echo "Settings file $VERSION_FILE not found"
             exit 1
-          fi
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.tag }}" == "" ]]; then
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-          else
-            echo "IMAGE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
           fi
 
       - name: Build and export to Docker
