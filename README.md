@@ -38,8 +38,8 @@ The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `
 
 | Tag / Release | Pandoc version | Image tag on Docker Hub |
 | --- | --- | --- |
-| latest | 3.2.1 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
-| v3.2.1 | 3.2.1 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
+| latest | 3.2.1 | [mfhepp/aih-pandoc:latest](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
+| v3.2.1 | 3.2.1 | [mfhepp/aih-pandoc:3.2.1](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 | v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 
 The versions for `latest` are stored in [`versions.txt`](versions.txt). The versions for each previous release will be in in 
@@ -52,6 +52,16 @@ The versions for `latest` are stored in [`versions.txt`](versions.txt). The vers
 The preferred way of building the images for Apple silicon is to use `build.sh` on an Apple M1 machine. You need Docker Desktop installed.
 
 ```bash
+# Clone from Github
+git clone https://github.com/academicinheaven/aih-pandoc
+cd aih-pandoc
+# Initialize Submodules
+git submodule update --init --recursive
+# Build
+./build.sh
+```
+
+```bash
 Usage: ./build.sh [ --help ] [ test | push | freeze | update ]
 
 Commands(s):
@@ -62,7 +72,7 @@ Commands(s):
   update: Update submodules and external files
 ```
 
-Here is the process:
+Here is the full process:
 
 1. Make sure that `IMAGE_TAG` in `version.txt` is set properly; it will also determine the tag on Docker Hub.
 2. Update all dependencies with `./build.sh update`.
@@ -106,7 +116,7 @@ Here is the process:
   - Support for `pip` is currently missing. (this is  not needed in this component of Academic in Heaven, but we aim at a unified approach.)
   - Add a release note to README.md (currently manual)
   - Create a release on Github (currently manual)
-9. Commit, add a tag, and push to Github.
+9. Commit, merge with main, add a tag, and push to Github.
 10. Currently manually: Attach the `latest` tag to the latest version
 ```bash
 docker login
