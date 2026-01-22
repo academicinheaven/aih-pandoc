@@ -96,8 +96,8 @@ Here is the full process:
   - [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
 3. Make sure `freeze/x.y.z/versions.txt` exists for the current version. If not, create it with `./build.sh freeze`.
 4. Create a new branch: `git checkout -b update_to_pandoc_x.y.z`
-5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**.
-6. Update all Git submodules  and other files with  `./build.sh update`. This essentially does the following:
+5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**. Also check if the Docker seccomp profile [`seccomp-default.json`](https://github.com/moby/profiles/blob/main/seccomp/default.json) is available from <https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json>.
+6. Update all Git submodules and other files with  `./build.sh update`. This essentially does the following:
 ```bash
 # Update git submodules
    git submodule update --init --recursive
@@ -107,8 +107,8 @@ Here is the full process:
    git pull           # Pull the latest changes
    cd ..
    # staging / commit / push will be up to the developer
-   # Fetching the latest seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
-   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json
+   # Fetching the latest seccomp profile from https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json
+   curl https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json -o seccomp-default.json
 ```
 7. Try to build and test the updated combinations with `./build.sh`
 8. If successful, produce a release:

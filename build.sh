@@ -120,8 +120,8 @@ update ()
    git pull          || return 1 # Pull the latest changes
    cd ..
    # Update Seccomp profile
-   echo Updating the seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
-   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json || return 1
+   echo Updating the seccomp profile from https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json
+   curl https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json -o seccomp-default.json || return 1
    # PARAMETERS="--no-cache"
    # ENVIRONMENT_FILE="env.yaml"
    echo "Note: env.yaml.lock will not be overwritten (use ./build.sh freeze for this)" 
