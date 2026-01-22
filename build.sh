@@ -21,7 +21,7 @@ usage ()
     printf '  (none): Build image\n'   
     printf '  test:   Run tests\n'
     printf '  push:   Push Docker image to repository\n'
-    printf '  freeze: Create version folder and freeze version.txt and env.yaml.lock\n'
+    printf '  freeze: Create version folder and freeze version.txt, env.yaml.lock, cabal.project, and cabal.project.freeze\n'
     printf '  update: Update submodules and external files\n'   
 }
 
@@ -132,13 +132,14 @@ update ()
 
 
 freeze () {
-   mkdir -p freeze/${IMAGE_TAG}
-   echo Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}
-   cp ${SOURCEFILE} freeze/${IMAGE_TAG}/${SOURCEFILE} || return 1
+   mkdir -p "freeze/${IMAGE_TAG}" || return 1
+   echo "Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}"
+   # -- protects against filenames that start with -
+   cp -- "${SOURCEFILE}" "freeze/${IMAGE_TAG}/${SOURCEFILE}" || return 1
    # Check if ENVIRONMENT_FILE ends with .lock or .yaml
    if [[ "$ENVIRONMENT_FILE" == *.lock ]]; then
       echo "Updating $ENVIRONMENT_FILE."
-      cp ${ENVIRONMENT_FILE} ${ENVIRONMENT_FILE}.old || return 1
+      cp "${ENVIRONMENT_FILE}" "${ENVIRONMENT_FILE}.old" || return 1
    elif [[ "$ENVIRONMENT_FILE" == *.yaml ]]; then
       echo "Creating $ENVIRONMENT_FILE.lock for $ENVIRONMENT_FILE"
       ENVIRONMENT_FILE="${ENVIRONMENT_FILE}.lock" 
@@ -153,12 +154,9 @@ freeze () {
       --cap-drop all \
       --rm \
       "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
-      micromamba env export -n base > ${ENVIRONMENT_FILE}
-   if [[ $? -ne 0 ]]; then
-      return $?
-   fi
-   echo Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE} 
-   cp ${ENVIRONMENT_FILE} freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}
+      micromamba env export -n base > ${ENVIRONMENT_FILE} || return $?
+   echo "Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}"
+   cp "${ENVIRONMENT_FILE}" "freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}" || return 1
    if [ -s "${ENVIRONMENT_FILE}.old" ]; then
       echo Updated packages:
       echo "=== NEW env.yaml.lock === | === PREVIOUS env.yaml.lock ==="
@@ -171,6 +169,24 @@ freeze () {
       fi
       rm -f yaml.lock.diff.txt
    fi
+   echo "Copying /usr/share/pandoc/cabal.project to freeze/${IMAGE_TAG}/cabal.project"
+   docker run \
+      --security-opt seccomp=seccomp-default.json \
+      --security-opt=no-new-privileges \
+      --read-only --tmpfs /tmp \
+      --cap-drop all \
+      --rm \
+      "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
+      cat /usr/share/pandoc/cabal.project > "freeze/${IMAGE_TAG}/cabal.project" || return $?
+   echo "Copying /usr/share/pandoc/cabal.project.freeze to freeze/${IMAGE_TAG}/cabal.project.freeze"
+   docker run \
+      --security-opt seccomp=seccomp-default.json \
+      --security-opt=no-new-privileges \
+      --read-only --tmpfs /tmp \
+      --cap-drop all \
+      --rm \
+      "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
+      cat /usr/share/pandoc/cabal.project.freeze > "freeze/${IMAGE_TAG}/cabal.project.freeze" || return $? 
    return 0
 }
 

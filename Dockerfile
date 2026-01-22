@@ -97,20 +97,55 @@ USER root
 # We copy directly from the submodule
 COPY dockerfiles/cabal.root.config /root/.cabal/config
 # Build pandoc and pandoc-cli
+# Log versions of build environment
+RUN cabal --version \
+  && ghc --version
+WORKDIR /work
+# We now use a cabal.project file to make sure all parts use the same solver
+RUN set -eux; \
+  cat > cabal.project <<EOF
+index-state: ${HACKAGE_INDEX_STATE}
+
+constraints:
+  pandoc == ${PANDOC_VERSION},
+  pandoc-cli == ${PANDOC_CLI_VERSION},
+  pandoc-crossref == ${PANDOC_CROSSREF_VERSION},
+  pandoc-plot == ${PANDOC_PLOT_VERSION}
+
+package pandoc-cli
+  flags: +embed_data_files
+EOF
+RUN echo "===== cabal.project =====" \
+ && sed -n '1,200p' /work/cabal.project \
+ && echo "========================="
+# New approach 2026-01-22
+# We do not install pandoc, just pandoc-cli!
+# Reminder: -fembed_data_files is now set in the cabal.project file
+RUN set -eux; \
+  cabal update; \
+  cabal install \
+    --project-file=/work/cabal.project \
+    --installdir=/out/bin \
+    --install-method=copy \
+    --overwrite-policy=always \
+    pandoc-cli pandoc-crossref pandoc-plot; \
+  cabal freeze \
+    --project-file=/work/cabal.project
+RUN echo "===== cabal.project.freeze =====" \
+ && sed -n '1,200p' /work/cabal.project.freeze \
+ && echo "==============================="
 # IMPORTANT: The option 
 #   -fembed_data_files is critical to make the resulting binary self-contained
 # See https://pandoc.org/installing.html#creating-a-relocatable-binary
 # TODO: Check if there is a newer version of cabal and ghc for Debian 13
 # Note: It used to be "v2-update" and "v2-install" due to major conceptual change around Cabal 2.0 (≈ 2017–2018):
-RUN cabal --version \
-  && ghc --version \
-  && cabal update \
-  && cabal install --install-method=copy \
-  pandoc-${PANDOC_VERSION} \
-  pandoc-cli-${PANDOC_CLI_VERSION} \
-  pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
-  pandoc-plot-${PANDOC_PLOT_VERSION} \
-  -fembed_data_files
+# RUN cabal update \
+#   && cabal install --install-method=copy \
+#   pandoc-${PANDOC_VERSION} \
+#   pandoc-cli-${PANDOC_CLI_VERSION} \
+#   pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
+#   pandoc-plot-${PANDOC_PLOT_VERSION} \
+#   -fembed_data_files
 # Note: The Pandoc dockerfiles use "cabal build" instead of "cabal install":
 # But that 
 # The `allow-newer` is required for
@@ -123,7 +158,8 @@ RUN cabal --version \
 #      --disable-bench \
 #      --jobs \
 #      . $extra_packages
-RUN echo OK: Pandoc binaries are now in "$HOME/.cabal/bin"
+# RUN echo OK: Pandoc binaries are now in "$HOME/.cabal/bin"
+RUN echo OK: Pandoc binaries are now in /out/bin
 # Back to the micromamba shell
 SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
@@ -138,9 +174,20 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 # Copy Pandoc, pandoc-cli, pandoc-crossref, and pandoc-plot from previous stage
+# Old:
+# COPY --from=pandoc_binaries \
+#  /root/.cabal/bin \
+#  /usr/local/bin
+# Pandoc binaries
 COPY --from=pandoc_binaries \
-  /root/.cabal/bin \
-  /usr/local/bin
+  /out/bin/ \
+  /usr/local/bin/
+# Cabal metadata (for debugging / export)
+COPY --from=pandoc_binaries \
+  /work/cabal.project \
+  /usr/share/pandoc/cabal.project
+COPY --from=pandoc_binaries \
+  /work/cabal.project.freeze \
 # TODO:
 # Maybe add pandoc symlinks and install runtime dependencies
 # RUN ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-lua \
