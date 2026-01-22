@@ -51,7 +51,7 @@ USER root
 # Pandoc Dockerfile differences:
 # - libgmp-dev=2:6.* \
 # - not using: cabal-debian \
-# Note: Was libncurses5 instead of 6 and libtinfo5 instead of libtinfo for Debian 12
+# Note: Was libncurses5 instead of 6 and libtinfo5 instead of libtinfo6 for Debian 12
 # See https://www.haskell.org/ghcup/install/#linux-debian
 RUN apt-get --no-allow-insecure-repositories update \
   && apt-get install -y \
@@ -72,7 +72,7 @@ RUN apt-get --no-allow-insecure-repositories update \
   liblua$LUA_VERSION-dev \
   libncurses-dev \
   libncurses6 \
-  libtinfo \
+  libtinfo6 \
   pkg-config \
   zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
