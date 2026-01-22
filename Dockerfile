@@ -8,10 +8,10 @@ ARG LUA_VERSION=5.4
 # The core Pandoc components need to be mutually compatible
 # This is now set by versions.txt, these are just defaults
 # TBD: Change to latest.
-ARG PANDOC_VERSION=3.2
-ARG PANDOC_CLI_VERSION=3.2
-ARG PANDOC_CROSSREF_VERSION=0.3.17.1
-ARG PANDOC_PLOT_VERSION=1.8.0
+ARG PANDOC_VERSION=3.8.3
+ARG PANDOC_CLI_VERSION=3.8.3
+ARG PANDOC_CROSSREF_VERSION=0.3.22
+ARG PANDOC_PLOT_VERSION=1.9.1
 
 # Stage 1: Patched version of Micromamba / Debian
 FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
@@ -33,7 +33,7 @@ USER $MAMBA_USER
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 
 # Stage 2: Haskell build environment
-# Build pandoc, pandoc-cli, pandoc-crossref and pandoc-plot for debian-bookworm and arm64
+# Build pandoc, pandoc-cli, pandoc-crossref and pandoc-plot for debian-trixie and arm64
 # In multiple steps for performance reasons
 # https://github.com/lierdakil/pandoc-crossref#building-from-hackage-with-cabal-install
 FROM micromamba_patched AS haskell_build
@@ -46,9 +46,13 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 # Install Haskell build environment, see https://www.haskell.org/ghcup/install/
+# Note: We do NOT follow the GHCup default approach, as it is risky to fetch and run
+# shell scripts with curl + piping to the shell!
 # Pandoc Dockerfile differences:
 # - libgmp-dev=2:6.* \
 # - not using: cabal-debian \
+# Note: Was libncurses5 instead of 6 and libtinfo5 instead of libtinfo for Debian 12
+# See https://www.haskell.org/ghcup/install/#linux-debian
 RUN apt-get --no-allow-insecure-repositories update \
   && apt-get install -y \
   bash \
@@ -67,11 +71,12 @@ RUN apt-get --no-allow-insecure-repositories update \
   lua$LUA_VERSION \
   liblua$LUA_VERSION-dev \
   libncurses-dev \
-  libncurses5 \
-  libtinfo5 \
+  libncurses6 \
+  libtinfo \
   pkg-config \
   zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
+
 # Back to the micromamba shell
 SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
@@ -92,22 +97,23 @@ USER root
 # We copy directly from the submodule
 COPY dockerfiles/cabal.root.config /root/.cabal/config
 # Build pandoc and pandoc-cli
-# Note: 
-# -fembed_data_files is critical to make the resulting binary self-contained
+# IMPORTANT: The option 
+#   -fembed_data_files is critical to make the resulting binary self-contained
 # See https://pandoc.org/installing.html#creating-a-relocatable-binary
-# TODO: Check if there is a newer version of cabal and ghc for Debian 12
+# TODO: Check if there is a newer version of cabal and ghc for Debian 13
+# Note: It used to be "v2-update" and "v2-install" due to major conceptual change around Cabal 2.0 (≈ 2017–2018):
 RUN cabal --version \
   && ghc --version \
-  && cabal v2-update \
-  && cabal v2-install --install-method=copy \
+  && cabal update \
+  && cabal install --install-method=copy \
   pandoc-${PANDOC_VERSION} \
   pandoc-cli-${PANDOC_CLI_VERSION} \
   pandoc-crossref-${PANDOC_CROSSREF_VERSION} \
   pandoc-plot-${PANDOC_PLOT_VERSION} \
   -fembed_data_files
-
-# Note: The Pandoc dockerfiles use cabal build instead of install:
-# Build pandoc and pandoc-crossref. The `allow-newer` is required for
+# Note: The Pandoc dockerfiles use "cabal build" instead of "cabal install":
+# But that 
+# The `allow-newer` is required for
 # when pandoc-crossref has not been updated yet, but we want to build
 # anyway.
 # RUN cabal v2-update \
