@@ -1,6 +1,6 @@
 # Pandoc Image for Academic in Heaven
 
-This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the [`mambaorg/micromamba`](https://micromamba-docker.readthedocs.io/en/latest/) image, which itself is (currently) based on Debian `bookwork-slim` for the [Academic in Heaven](https://github.com/academicinheaven) project.
+This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the [`mambaorg/micromamba`](https://micromamba-docker.readthedocs.io/en/latest/) image, which itself is (currently) based on Debian 13 (`trixie-slim`) for the [Academic in Heaven](https://github.com/academicinheaven) project.
 
 As [Academic in Heaven](https://github.com/academicinheaven) is based on `micromamba` and 
 
