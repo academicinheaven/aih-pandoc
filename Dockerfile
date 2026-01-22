@@ -104,7 +104,7 @@ RUN cabal --version \
 WORKDIR /work
 # We now use a cabal.project file to make sure all parts use the same solver
 RUN set -eux; \
-  cat > cabal.project <<EOF
+  cat > /work/cabal.project <<EOF
 index-state: ${HACKAGE_INDEX_STATE}
 
 constraints:
@@ -112,6 +112,8 @@ constraints:
   pandoc-cli == ${PANDOC_CLI_VERSION},
   pandoc-crossref == ${PANDOC_CROSSREF_VERSION},
   pandoc-plot == ${PANDOC_PLOT_VERSION}
+
+packages: dummy
 
 package pandoc-cli
   flags: +embed_data_files
