@@ -48,3 +48,8 @@ else
     exit 1
 fi
 
+# TODO: Test pandoc-crossref
+
+# TODO: Test pandoc-plot
+# Matplotlib should be available
+

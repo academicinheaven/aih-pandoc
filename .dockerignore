@@ -1,5 +1,9 @@
 .git
 .github
+.dockerignore
+.gitignore
+.gitmodules
+# dockerfiles
 docs
 test
 LICENSE

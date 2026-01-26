@@ -1,17 +1,23 @@
-# TODO: This may be set in the workflow.yaml
-IMAGE_NAME="aih-pandoc"
-# The image tag should match the Pandoc version
+# versions.txt
+IMAGE_NAME="aih2-pandoc"
+# The image tag should indicates the Pandoc version
 # Note: The latest version can also be constrained by the Haskell compiler version!
-IMAGE_TAG="3.7.0.2" # "3.8.3"
+# Latest: 3.8.3
+PANDOC_VERSION=3.8.3 # 3.7.0.2
+AIH_RELEASE="" # "r1" for the first update for the same Pandoc version
+# If AIH_RELEASE="r1" → expands to 3.8.3-r1
+IMAGE_TAG="${PANDOC_VERSION}${AIH_RELEASE:+-${AIH_RELEASE}}"
+DEBIAN_RELEASE=12
+DEBIAN_CODENAME=bookworm
 ENVIRONMENT_FILE=env.yaml
-# Latest is 2.5.0
-MICROMAMBA_VERSION=2.5.0
+MICROMAMBA_VERSION="2.5.0-debian12"
+MICROMAMBA_DIGEST="" # "@sha256:317bd54238c279920cd110bff1054bb718701f52f995fd79a932b25a0902d3e0"
+# mambaorg/micromamba:2.5.0-debian12
+BASE_IMAGE="mambaorg/micromamba:$MICROMAMBA_VERSION$MICROMAMBA_DIGEST"
 # Latest: 3.8.3
-PANDOC_VERSION=3.7.0.2 # 3.8.3
-# Latest: 3.8.3
-PANDOC_CLI_VERSION=3.7.0.2 # 3.8.3
-# Latest: 0.3.22, Pandoc (>=3.8.2 && <3.9)
-PANDOC_CROSSREF_VERSION=0.3.20  # 0.3.22
+PANDOC_CLI_VERSION="$PANDOC_VERSION"  # 3.7.0.2
+# Latest: 0.3.22, Pandoc (>=3.8.2 && <3.9) / 0.3.20 
+PANDOC_CROSSREF_VERSION=0.3.22
 # LUA 5.5 is available, but we stick with 5.4 for compatibility with filter for the moment
 LUA_VERSION=5.4
 # Latest: 1.9.1, Pandoc (>=3 && <4)

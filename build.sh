@@ -1,7 +1,7 @@
 #!/bin/bash
 # Shell script for building Docker image
 
-IMAGE_NAME="aih-pandoc"
+IMAGE_NAME="aih_pandoc"
 IMAGE_TAG="latest"
 USERNAME=$USER
 DOCKER_HUB_USERNAME="mfhepp"
@@ -20,7 +20,7 @@ usage ()
     printf 'Usage: %s [ --help ] [ nocache | test | push | freeze | update | terminal ]\n\n' "$0"
     printf 'Commands(s):\n'
     printf '  (none):   Build image\n'
-    printf '  nocache:  Build image and ignore all cached stages\n'     
+    printf '  --no-cache:  Build image and ignore all cached stages\n'     
     printf '  test:     Run tests\n'
     printf '  push:     Push Docker image to repository\n'
     printf '  freeze:   Create version folder and freeze version.txt and env.yaml.lock\n'
@@ -49,28 +49,31 @@ build ()
    echo
    echo Settings:
    echo "------------------------------------------"
+   echo "Debian Version: $DEBIAN_RELEASE ($DEBIAN_CODENAME)"
    echo "Micromamba:            $MICROMAMBA_VERSION"
+   echo "Micromamba digest:     $MICROMAMBA_DIGEST"
+   echo "Micromamba base image: $BASE_IMAGE"
    echo "Parameters:            $PARAMETERS"
    echo "Environment file:      $ENVIRONMENT_FILE"
    echo "PANDOC_VERSION:        $PANDOC_VERSION"
    echo "PANDOC_CLI_VERSION:    $PANDOC_CLI_VERSION"
    echo "PANDOC_CROSSREF_VERSION: $PANDOC_CROSSREF_VERSION"
-   echo "LUA_VERSION:           $LUA_VERSION"
    echo "PANDOC_PLOT_VERSION:   $PANDOC_PLOT_VERSION"
+   echo "LUA_VERSION:           $LUA_VERSION"
    echo
    # Build image
    docker build \
       ${args:+$args} \
-      ${PARAMETERS} \
-      --build-arg MICROMAMBA_VERSION=${MICROMAMBA_VERSION} \
-      --build-arg ENVIRONMENT_FILE=${ENVIRONMENT_FILE} \
-      --build-arg PANDOC_VERSION=${PANDOC_VERSION} \
-      --build-arg PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION} \
-      --build-arg PANDOC_CROSSREF_VERSION=${PANDOC_CROSSREF_VERSION} \
-      --build-arg LUA_VERSION=${LUA_VERSION} \
-      --build-arg PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION} \
+      --build-arg MICROMAMBA_VERSION="${MICROMAMBA_VERSION}" \
+      --build-arg BASE_IMAGE="${BASE_IMAGE}" \
+      --build-arg ENVIRONMENT_FILE="${ENVIRONMENT_FILE}" \
+      --build-arg PANDOC_VERSION="${PANDOC_VERSION}" \
+      --build-arg PANDOC_CLI_VERSION="${PANDOC_CLI_VERSION}" \
+      --build-arg PANDOC_CROSSREF_VERSION="${PANDOC_CROSSREF_VERSION}" \
+      --build-arg LUA_VERSION="${LUA_VERSION}" \
+      --build-arg PANDOC_PLOT_VERSION="${PANDOC_PLOT_VERSION}" \
       --progress=plain \
-      --tag ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} .
+      --tag "${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}" .
 #       --build-arg PLATFORM=${PLATFORM} \
 #      --build-arg BUILDPLATFORM=${PLATFORM} \
    if [[ $? -ne 0 ]]; then
@@ -225,10 +228,7 @@ if [[ "$1" == "--help" ]]; then
    exit 0
 elif [[ $# -eq 0 || -z "$1" ]]; then
    build
-   exit $?
-elif [[ "$1" == "nocache" ]]; then
-   build "--no-cache"
-   exit $?   
+   exit $? 
 elif [[ "$1" == "freeze" ]]; then
    freeze
    exit $?
