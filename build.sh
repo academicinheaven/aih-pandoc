@@ -89,13 +89,13 @@ build ()
 
 
 run_tests () {
-   # IMAGE_TAG="dev"
    NETWORK="--net=none"
    # Use this if tests require network connection:
    # NETWORK="--net=host"
    # TODO: Check if read-only filesystem can be made working
    # READ_ONLY=""
-   READ_ONLY="--read-only --tmpfs /tmp"   
+   # READ_ONLY="--read-only --tmpfs /tmp"   
+   READ_ONLY="--read-only --tmpfs /tmp:rw,exec,nosuid,nodev"
    echo Running tests against the local image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
    docker run \
     --security-opt seccomp=seccomp-default.json \
@@ -125,7 +125,7 @@ terminal () {
    # TODO: Check if read-only filesystem can be made working
    # READ_ONLY=""
    READ_ONLY="--read-only --tmpfs /tmp"   
-   echo Starting sell in the ocal image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+   echo Starting shell in the local image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
    docker run \
     --security-opt seccomp=seccomp-default.json \
     --security-opt=no-new-privileges \
