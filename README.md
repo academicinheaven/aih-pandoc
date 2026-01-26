@@ -28,7 +28,7 @@ As this is is a lengthy process (15 minutes and more), we keep this process sepa
 
 ```bash
 docker run --rm mfhepp/aih2-pandoc:latest /bin/bash -c "pandoc --version"
-docker run --rm mfhepp/aih2-pandoc:3.2 /bin/bash -c "pandoc --version"
+docker run --rm mfhepp/aih2-pandoc:3.8.3 /bin/bash -c "pandoc --version"
 docker run --rm -it --mount type=bind,source="$(pwd)",target=/usr/aih/data/src \
     mfhepp/aih2-pandoc:latest  \
      /bin/bash
@@ -36,7 +36,7 @@ docker run --rm -it --mount type=bind,source="$(pwd)",target=/usr/aih/data/src \
 
 ## Releases and Tags
 
-The version numbering for `aih2-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.**. Any updated version with the same Pandoc version will be marked with an `-rcx` suffix, like `aih2-pandoc-3.8.3.-rc1`.
+The version numbering for `aih2-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** Any updated version with the same Pandoc version will be marked with an `-rcx` suffix, like `aih2-pandoc-3.8.3-rc1`.
 
 **Note:** The base name is now `aih2-pandoc` (used to be `aih-pandoc`).
 

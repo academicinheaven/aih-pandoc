@@ -163,7 +163,8 @@ update ()
    return 0
 }
 
-
+# TODO: Also export Debian packages installed from
+#      /usr/share/aih/freeze/runtime-packages.txt 
 freeze () {
    mkdir -p "freeze/${IMAGE_TAG}" || return 1
    echo "Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}"
