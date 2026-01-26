@@ -1,6 +1,6 @@
 # Dockerfile for pandoc, pandoc-crossref, and pandoc-plot
 # based on https://github.com/pandoc/dockerfiles
-ARG BUILDPLATFORM
+# ARG BUILDPLATFORM
 ARG MICROMAMBA_VERSION=latest
 ARG ENVIRONMENT_FILE=env.yaml
 ARG BASE_IMAGE=mambaorg/micromamba
@@ -14,7 +14,7 @@ ARG PANDOC_CROSSREF_VERSION=0.3.22
 ARG PANDOC_PLOT_VERSION=1.9.1
 
 # Stage 1: Patched version of Micromamba / Debian
-FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
+FROM ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS micromamba_patched
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
@@ -33,6 +33,11 @@ USER $MAMBA_USER
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 
 # Stage 2: Haskell build environment
+# TODO: Maybe use plain debian 13 slim base image, not need to use micromamba?
+# Install cabal via GHCup:
+#    https://pandoc.org/installing.html#quick-cabal-method
+# TODO: Improve caching for speed
+# TODO: Check required debian packages and versions
 # Build pandoc, pandoc-cli, pandoc-crossref and pandoc-plot for debian-trixie and arm64
 # In multiple steps for performance reasons
 # https://github.com/lierdakil/pandoc-crossref#building-from-hackage-with-cabal-install
@@ -42,11 +47,13 @@ ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
 ARG PANDOC_CROSSREF_VERSION
 ARG PANDOC_PLOT_VERSION
-ARG HACKAGE_INDEX_STATE="2025-10-01T00:00:00Z"
+# ARG HACKAGE_INDEX_STATE="2025-10-01T00:00:00Z"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 # Install Haskell build environment, see https://www.haskell.org/ghcup/install/
+# GHCup approach (not ideal from a security perspective!)
+#    curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 # Note: We do NOT follow the GHCup default approach, as it is risky to fetch and run
 # shell scripts with curl + piping to the shell!
 # Pandoc Dockerfile differences:
@@ -54,6 +61,7 @@ USER root
 # - not using: cabal-debian \
 # Note: Was libncurses5 instead of 6 and libtinfo5 instead of libtinfo6 for Debian 12
 # See https://www.haskell.org/ghcup/install/#linux-debian
+# TODO: Added libnuma-dev
 RUN apt-get --no-allow-insecure-repositories update \
   && apt-get install -y \
   bash \
@@ -73,16 +81,21 @@ RUN apt-get --no-allow-insecure-repositories update \
   liblua$LUA_VERSION-dev \
   libncurses-dev \
   libncurses6 \
+  libnuma-dev \
   libtinfo6 \
   pkg-config \
   zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
-
 # Back to the micromamba shell
 SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 USER $MAMBA_USER
 
 # Stage 3: Pandoc and Pandoc CLI
+# TODO: Improve caching for speed
+# TODO: Check required debian packages and versions
+#     ldd /out/bin/pandoc
+#     ldd /out/bin/pandoc-crossref
+#     ldd /out/bin/pandoc-plot
 FROM haskell_build AS pandoc_binaries
 ARG PANDOC_VERSION
 ARG PANDOC_CLI_VERSION
@@ -101,42 +114,56 @@ COPY dockerfiles/cabal.root.config /root/.cabal/config
 # Log versions of build environment
 RUN cabal --version \
   && ghc --version
-WORKDIR /work
+# WORKDIR /work
 # We now use a cabal.project file to make sure all parts use the same solver
-RUN set -eux; \
-  cat > /work/cabal.project <<EOF
-index-state: ${HACKAGE_INDEX_STATE}
-
-constraints:
-  pandoc == ${PANDOC_VERSION},
-  pandoc-cli == ${PANDOC_CLI_VERSION},
-  pandoc-crossref == ${PANDOC_CROSSREF_VERSION},
-  pandoc-plot == ${PANDOC_PLOT_VERSION}
-
-packages: dummy
-
-package pandoc-cli
-  flags: +embed_data_files
-EOF
-RUN echo "===== cabal.project =====" \
- && sed -n '1,200p' /work/cabal.project \
- && echo "========================="
+# RUN set -eux; \
+#  cat > /work/cabal.project <<EOF
+#index-state: ${HACKAGE_INDEX_STATE}
+#
+#constraints:
+#  pandoc == ${PANDOC_VERSION},
+#  pandoc-cli == ${PANDOC_CLI_VERSION},
+#  pandoc-crossref == ${PANDOC_CROSSREF_VERSION},
+#  pandoc-plot == ${PANDOC_PLOT_VERSION}
+# package pandoc-cli
+#  flags: +embed_data_files
+# EOF
+# RUN echo "===== cabal.project =====" \
+# && sed -n '1,200p' /work/cabal.project \
+#  && echo "========================="
 # New approach 2026-01-22
 # We do not install pandoc, just pandoc-cli!
-# Reminder: -fembed_data_files is now set in the cabal.project file
+# Reminder: -fembed_data_files is now set in the cabal.project 
+#RUN echo Checking latest compatible combinations
+# RUN set -eux; \
+#  cabal update; \
+#  echo "Now checking latest compatible combinations (dry-run)"; \
+#  cabal install -v3 --dry-run -j \
+#    pandoc-cli pandoc-crossref pandoc-plot 
+    #   --constraint "pandoc +embed_data_files"
 RUN set -eux; \
   cabal update; \
-  cabal install \
-    --project-file=/work/cabal.project \
+  cabal install -j \
     --installdir=/out/bin \
     --install-method=copy \
     --overwrite-policy=always \
-    pandoc-cli pandoc-crossref pandoc-plot; \
-  cabal freeze \
-    --project-file=/work/cabal.project
-RUN echo "===== cabal.project.freeze =====" \
- && sed -n '1,200p' /work/cabal.project.freeze \
- && echo "==============================="
+    "pandoc-cli-${PANDOC_CLI_VERSION}" \
+    "pandoc-crossref-${PANDOC_CROSSREF_VERSION}" \
+    "pandoc-plot-${PANDOC_PLOT_VERSION}" \
+    --constraint "pandoc == ${PANDOC_VERSION}" \
+    --constraint "pandoc +embed_data_files"
+#  \
+#  --constraint "pandoc == <YOUR_DESIRED_VERSION>"
+#     --constraint "pandoc == ${PANDOC_VERSION}" \
+#    "pandoc-cli-${PANDOC_CLI_VERSION}" \
+#    "pandoc-crossref-${PANDOC_CROSSREF_VERSION}" \
+#    "pandoc-plot-${PANDOC_PLOT_VERSION}" \
+    # cabal install --dry-run -j \
+#  pandoc-cli pandoc-crossref pandoc-plot \
+#  --constraint "pandoc == <YOUR_DESIRED_VERSION>"
+# RUN echo "===== cabal.project.freeze =====" \
+# && sed -n '1,200p' /work/cabal.project.freeze \
+# && echo "==============================="
 # IMPORTANT: The option 
 #   -fembed_data_files is critical to make the resulting binary self-contained
 # See https://pandoc.org/installing.html#creating-a-relocatable-binary
@@ -169,8 +196,16 @@ USER $MAMBA_USER
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 
 # Stage 4: Copy into fresh micromamba-patched (or aih-texlive)
-# FROM micromamba_patched as aih-pandoc
-FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}:${MICROMAMBA_VERSION} AS aih-pandoc
+# TODO: Maybe use aih-texlive as the base image?
+# TODO: Check required debian packages and versions
+# TODO: TOP - compare with
+# https://github.com/pandoc/dockerfiles/blob/main/3.8.3/debian/Dockerfile
+# e.g. symlinks etc.
+# https://github.com/pandoc/dockerfiles/blob/main/3.8.3/debian/core/Dockerfile
+# https://github.com/pandoc/dockerfiles/blob/main/3.8.3/debian/extra/Dockerfile
+# Maybe start with or align closer with those?
+# think about uv instead of pip or mamba (but conda + pip is quite good for the moment)
+FROM micromamba_patched as aih-pandoc
 ARG LUA_VERSION
 ARG ENVIRONMENT_FILE
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -185,16 +220,13 @@ USER root
 COPY --from=pandoc_binaries \
   /out/bin/ \
   /usr/local/bin/
-# Cabal metadata (for debugging / export)
-COPY --from=pandoc_binaries \
-  /work/cabal.project \
-  /usr/share/pandoc/cabal.project
-COPY --from=pandoc_binaries \
-  /work/cabal.project.freeze \
 # TODO:
 # Maybe add pandoc symlinks and install runtime dependencies
 # RUN ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-lua \
 #  && ln -s /usr/local/bin/pandoc /usr/local/bin/pandoc-server \
+# TODO: Check if        libpcre3=\* \
+# replaced by libpcre2-dev
+# will do the trick
 RUN apt-get --no-allow-insecure-repositories update \
   && apt-get install -y \
        ca-certificates=\* \
@@ -205,7 +237,8 @@ RUN apt-get --no-allow-insecure-repositories update \
        liblua$LUA_VERSION-dev \
        libatomic1=\* \
        libgmp10=\* \
-       libpcre3=\* \
+       libnuma-dev \
+       libpcre2-dev=\* \
        libyaml-0-2=\* \
        lua-lpeg=\* \
        perl \
@@ -216,8 +249,8 @@ RUN apt-get --no-allow-insecure-repositories update \
        xz-utils \
        zlib1g=\* \
   && rm -rf /var/lib/apt/lists/*
-SHELL ["/usr/local/bin/_dockerfile_shell.sh"]       
 USER $MAMBA_USER
+SHELL ["/usr/local/bin/_dockerfile_shell.sh"]       
 RUN echo --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE}
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} ${ENVIRONMENT_FILE} /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \

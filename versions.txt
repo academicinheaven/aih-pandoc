@@ -1,16 +1,17 @@
-# This is now set in the workflow.yaml
-# IMAGE_NAME="aih-pandoc"
+# TODO: This may be set in the workflow.yaml
+IMAGE_NAME="aih-pandoc"
 # The image tag should match the Pandoc version
-IMAGE_TAG="3.8.3"
+# Note: The latest version can also be constrained by the Haskell compiler version!
+IMAGE_TAG="3.7.0.2" # "3.8.3"
 ENVIRONMENT_FILE=env.yaml
 # Latest is 2.5.0
 MICROMAMBA_VERSION=2.5.0
 # Latest: 3.8.3
-PANDOC_VERSION=3.8.3
+PANDOC_VERSION=3.7.0.2 # 3.8.3
 # Latest: 3.8.3
-PANDOC_CLI_VERSION=3.8.3
+PANDOC_CLI_VERSION=3.7.0.2 # 3.8.3
 # Latest: 0.3.22, Pandoc (>=3.8.2 && <3.9)
-PANDOC_CROSSREF_VERSION=0.3.22
+PANDOC_CROSSREF_VERSION=0.3.20  # 0.3.22
 # LUA 5.5 is available, but we stick with 5.4 for compatibility with filter for the moment
 LUA_VERSION=5.4
 # Latest: 1.9.1, Pandoc (>=3 && <4)

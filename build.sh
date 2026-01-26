@@ -8,7 +8,8 @@ DOCKER_HUB_USERNAME="mfhepp"
 SOURCEFILE="versions.txt"
 PARAMETERS=""
 # We only build for Apple M1 for the moment
-PLATFORM="linux/arm64"
+# Also note the differences between BUILDPLATFORM, TARGETPLATFORM, and TARGETARCH
+# PLATFORM="linux/arm64"
 ENVIRONMENT_FILE="env.yaml.lock"
 DEVELOPMENT_IMAGE="false"
 
@@ -16,18 +17,21 @@ DEVELOPMENT_IMAGE="false"
 usage ()
 {
     printf '\nBuilds the Docker image from the Dockerfile\n\n'
-    printf 'Usage: %s [ --help ] [ test | push | freeze | update ]\n\n' "$0"
+    printf 'Usage: %s [ --help ] [ nocache | test | push | freeze | update | terminal ]\n\n' "$0"
     printf 'Commands(s):\n'
-    printf '  (none): Build image\n'   
-    printf '  test:   Run tests\n'
-    printf '  push:   Push Docker image to repository\n'
-    printf '  freeze: Create version folder and freeze version.txt, env.yaml.lock, cabal.project, and cabal.project.freeze\n'
-    printf '  update: Update submodules and external files\n'   
+    printf '  (none):   Build image\n'
+    printf '  nocache:  Build image and ignore all cached stages\n'     
+    printf '  test:     Run tests\n'
+    printf '  push:     Push Docker image to repository\n'
+    printf '  freeze:   Create version folder and freeze version.txt and env.yaml.lock\n'
+    printf '  update:   Update submodules and external files\n'   
+    printf '  terminal: Start shell for debugging etc. \n'   
 }
-
 
 build ()
 {
+   local args="${1:-}"
+   echo "Building with args: ${args:-<none>}"
    if [ -s "$ENVIRONMENT_FILE" ]; then
       echo "Using pinned versions from $ENVIRONMENT_FILE"
    else
@@ -41,7 +45,7 @@ build ()
    fi
    echo
    echo Building "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
-   echo "Platform:              $PLATFORM"
+   # echo "Platform:              $PLATFORM"
    echo
    echo Settings:
    echo "------------------------------------------"
@@ -53,20 +57,22 @@ build ()
    echo "PANDOC_CROSSREF_VERSION: $PANDOC_CROSSREF_VERSION"
    echo "LUA_VERSION:           $LUA_VERSION"
    echo "PANDOC_PLOT_VERSION:   $PANDOC_PLOT_VERSION"
-   echo "PLATFORM: $PLATFORM"
    echo
    # Build image
-   docker build --platform ${PLATFORM} ${PARAMETERS} \
-   --build-arg PLATFORM=${PLATFORM} \
-   --build-arg BUILDPLATFORM=${PLATFORM} \
-   --build-arg MICROMAMBA_VERSION=${MICROMAMBA_VERSION} \
-   --build-arg ENVIRONMENT_FILE=${ENVIRONMENT_FILE} \
-   --build-arg PANDOC_VERSION=${PANDOC_VERSION} \
-   --build-arg PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION} \
-   --build-arg PANDOC_CROSSREF_VERSION=${PANDOC_CROSSREF_VERSION} \
-   --build-arg LUA_VERSION=${LUA_VERSION} \
-   --build-arg PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION} \
-   --progress=plain --tag ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} .
+   docker build \
+      ${args:+$args} \
+      ${PARAMETERS} \
+      --build-arg MICROMAMBA_VERSION=${MICROMAMBA_VERSION} \
+      --build-arg ENVIRONMENT_FILE=${ENVIRONMENT_FILE} \
+      --build-arg PANDOC_VERSION=${PANDOC_VERSION} \
+      --build-arg PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION} \
+      --build-arg PANDOC_CROSSREF_VERSION=${PANDOC_CROSSREF_VERSION} \
+      --build-arg LUA_VERSION=${LUA_VERSION} \
+      --build-arg PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION} \
+      --progress=plain \
+      --tag ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} .
+#       --build-arg PLATFORM=${PLATFORM} \
+#      --build-arg BUILDPLATFORM=${PLATFORM} \
    if [[ $? -ne 0 ]]; then
       echo "ERROR: Docker build failed."
       return 1
@@ -108,6 +114,30 @@ run_tests () {
     return $EXIT_CODE
 }
 
+terminal () {
+   # IMAGE_TAG="dev"
+   NETWORK="--net=none"
+   # Use this if tests require network connection:
+   # NETWORK="--net=host"
+   # TODO: Check if read-only filesystem can be made working
+   # READ_ONLY=""
+   READ_ONLY="--read-only --tmpfs /tmp"   
+   echo Starting sell in the ocal image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+   docker run \
+    --security-opt seccomp=seccomp-default.json \
+    --security-opt=no-new-privileges \
+    --cap-drop all \
+    $READ_ONLY \
+    --rm \
+    -it \
+    --mount type=bind,source="$(pwd)/output",target=/mnt/output \
+    --mount type=bind,source="$(pwd)/tests",target=/usr/aih/data/src,readonly \
+    $NETWORK \
+    "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
+    /bin/bash
+    EXIT_CODE=$?
+    return $EXIT_CODE
+}
 
 update ()
 {
@@ -169,24 +199,6 @@ freeze () {
       fi
       rm -f yaml.lock.diff.txt
    fi
-   echo "Copying /usr/share/pandoc/cabal.project to freeze/${IMAGE_TAG}/cabal.project"
-   docker run \
-      --security-opt seccomp=seccomp-default.json \
-      --security-opt=no-new-privileges \
-      --read-only --tmpfs /tmp \
-      --cap-drop all \
-      --rm \
-      "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
-      cat /usr/share/pandoc/cabal.project > "freeze/${IMAGE_TAG}/cabal.project" || return $?
-   echo "Copying /usr/share/pandoc/cabal.project.freeze to freeze/${IMAGE_TAG}/cabal.project.freeze"
-   docker run \
-      --security-opt seccomp=seccomp-default.json \
-      --security-opt=no-new-privileges \
-      --read-only --tmpfs /tmp \
-      --cap-drop all \
-      --rm \
-      "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
-      cat /usr/share/pandoc/cabal.project.freeze > "freeze/${IMAGE_TAG}/cabal.project.freeze" || return $? 
    return 0
 }
 
@@ -214,6 +226,9 @@ if [[ "$1" == "--help" ]]; then
 elif [[ $# -eq 0 || -z "$1" ]]; then
    build
    exit $?
+elif [[ "$1" == "nocache" ]]; then
+   build "--no-cache"
+   exit $?   
 elif [[ "$1" == "freeze" ]]; then
    freeze
    exit $?
@@ -229,7 +244,10 @@ elif [[ "$1" == "push" ]]; then
    if [[ $EXIT_CODE -ne 0 ]]; then
      echo "FAILED: One or more docker commands failed."
    fi
-   exit $EXIT_CODE   
+   exit $EXIT_CODE
+elif [[ "$1" == "terminal" ]]; then
+   terminal
+   exit $?   
 else
   echo "Invalid option."
   echo
