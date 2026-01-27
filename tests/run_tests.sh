@@ -83,7 +83,7 @@ pandoc --citeproc test-citeproc.md -o /tmp/tests/test-citeproc.html > /dev/null 
 # Check if the HTML file was created
 if [ -f /tmp/tests/test-citeproc.html ]; then
     echo "PASSED: pandoc successfully created test-citeproc.html."
-    cat /tmp/tests/test-citeproc.html
+    # cat /tmp/tests/test-citeproc.html
     rm -f /tmp/tests/*
 else
     echo "FAILED: pandoc failed to create test-citeproc.html."
