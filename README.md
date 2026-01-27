@@ -179,4 +179,4 @@ We thankfully acknowledge the following components:
 - [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) under [GPL 2.0](https://github.com/lierdakil/pandoc-crossref/blob/master/LICENSE)
 - [pandoc-dockerfiles](https://github.com/pandoc/dockerfiles) under [GPL 2.0](https://github.com/pandoc/dockerfiles/blob/master/LICENSE)
 - [pandoc-plot](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE) under [GPL 2.0](https://github.com/LaurentRDC/pandoc-plot/blob/master/LICENSE)
-- The [`seccomp` profile from the Moby project](https://github.com/moby/moby/tree/master) under [Apache 2.0](https://github.com/moby/moby/blob/master/LICENSE)
+- The [`seccomp` profile from the Moby project](https://github.com/moby/profiles/tree/main) under [Apache 2.0](https://github.com/moby/profiles/blob/main/LICENSE)
