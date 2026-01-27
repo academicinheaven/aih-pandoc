@@ -1,14 +1,15 @@
 #!/bin/bash
 # Shell script for building Docker image
 
-IMAGE_NAME="aih-pandoc"
+IMAGE_NAME="aih_pandoc"
 IMAGE_TAG="latest"
 USERNAME=$USER
 DOCKER_HUB_USERNAME="mfhepp"
 SOURCEFILE="versions.txt"
 PARAMETERS=""
 # We only build for Apple M1 for the moment
-PLATFORM="linux/arm64"
+# Also note the differences between BUILDPLATFORM, TARGETPLATFORM, and TARGETARCH
+# PLATFORM="linux/arm64"
 ENVIRONMENT_FILE="env.yaml.lock"
 DEVELOPMENT_IMAGE="false"
 
@@ -16,18 +17,21 @@ DEVELOPMENT_IMAGE="false"
 usage ()
 {
     printf '\nBuilds the Docker image from the Dockerfile\n\n'
-    printf 'Usage: %s [ --help ] [ test | push | freeze | update ]\n\n' "$0"
+    printf 'Usage: %s [ --help ] [ nocache | test | push | freeze | update | terminal ]\n\n' "$0"
     printf 'Commands(s):\n'
-    printf '  (none): Build image\n'   
-    printf '  test:   Run tests\n'
-    printf '  push:   Push Docker image to repository\n'
-    printf '  freeze: Create version folder and freeze version.txt and env.yaml.lock\n'
-    printf '  update: Update submodules and external files\n'   
+    printf '  (none):   Build image\n'
+    printf '  --no-cache:  Build image and ignore all cached stages\n'     
+    printf '  test:     Run tests\n'
+    printf '  push:     Push Docker image to repository\n'
+    printf '  freeze:   Create version folder and freeze version.txt and env.yaml.lock\n'
+    printf '  update:   Update submodules and external files\n'   
+    printf '  terminal: Start shell for debugging etc. \n'   
 }
-
 
 build ()
 {
+   local args="${1:-}"
+   echo "Building with args: ${args:-<none>}"
    if [ -s "$ENVIRONMENT_FILE" ]; then
       echo "Using pinned versions from $ENVIRONMENT_FILE"
    else
@@ -41,32 +45,37 @@ build ()
    fi
    echo
    echo Building "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
-   echo "Platform:              $PLATFORM"
+   # echo "Platform:              $PLATFORM"
    echo
    echo Settings:
    echo "------------------------------------------"
+   echo "Debian Version: $DEBIAN_RELEASE ($DEBIAN_CODENAME)"
    echo "Micromamba:            $MICROMAMBA_VERSION"
+   echo "Micromamba digest:     $MICROMAMBA_DIGEST"
+   echo "Micromamba base image: $BASE_IMAGE"
    echo "Parameters:            $PARAMETERS"
    echo "Environment file:      $ENVIRONMENT_FILE"
    echo "PANDOC_VERSION:        $PANDOC_VERSION"
    echo "PANDOC_CLI_VERSION:    $PANDOC_CLI_VERSION"
    echo "PANDOC_CROSSREF_VERSION: $PANDOC_CROSSREF_VERSION"
-   echo "LUA_VERSION:           $LUA_VERSION"
    echo "PANDOC_PLOT_VERSION:   $PANDOC_PLOT_VERSION"
-   echo "PLATFORM: $PLATFORM"
+   echo "LUA_VERSION:           $LUA_VERSION"
    echo
    # Build image
-   docker build --platform ${PLATFORM} ${PARAMETERS} \
-   --build-arg PLATFORM=${PLATFORM} \
-   --build-arg BUILDPLATFORM=${PLATFORM} \
-   --build-arg MICROMAMBA_VERSION=${MICROMAMBA_VERSION} \
-   --build-arg ENVIRONMENT_FILE=${ENVIRONMENT_FILE} \
-   --build-arg PANDOC_VERSION=${PANDOC_VERSION} \
-   --build-arg PANDOC_CLI_VERSION=${PANDOC_CLI_VERSION} \
-   --build-arg PANDOC_CROSSREF_VERSION=${PANDOC_CROSSREF_VERSION} \
-   --build-arg LUA_VERSION=${LUA_VERSION} \
-   --build-arg PANDOC_PLOT_VERSION=${PANDOC_PLOT_VERSION} \
-   --progress=plain --tag ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} .
+   docker build \
+      ${args:+$args} \
+      --build-arg MICROMAMBA_VERSION="${MICROMAMBA_VERSION}" \
+      --build-arg BASE_IMAGE="${BASE_IMAGE}" \
+      --build-arg ENVIRONMENT_FILE="${ENVIRONMENT_FILE}" \
+      --build-arg PANDOC_VERSION="${PANDOC_VERSION}" \
+      --build-arg PANDOC_CLI_VERSION="${PANDOC_CLI_VERSION}" \
+      --build-arg PANDOC_CROSSREF_VERSION="${PANDOC_CROSSREF_VERSION}" \
+      --build-arg LUA_VERSION="${LUA_VERSION}" \
+      --build-arg PANDOC_PLOT_VERSION="${PANDOC_PLOT_VERSION}" \
+      --progress=plain \
+      --tag "${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}" .
+#       --build-arg PLATFORM=${PLATFORM} \
+#      --build-arg BUILDPLATFORM=${PLATFORM} \
    if [[ $? -ne 0 ]]; then
       echo "ERROR: Docker build failed."
       return 1
@@ -80,13 +89,13 @@ build ()
 
 
 run_tests () {
-   # IMAGE_TAG="dev"
    NETWORK="--net=none"
    # Use this if tests require network connection:
    # NETWORK="--net=host"
    # TODO: Check if read-only filesystem can be made working
    # READ_ONLY=""
-   READ_ONLY="--read-only --tmpfs /tmp"   
+   # READ_ONLY="--read-only --tmpfs /tmp"   
+   READ_ONLY="--read-only --tmpfs /tmp:rw,exec,nosuid,nodev"
    echo Running tests against the local image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
    docker run \
     --security-opt seccomp=seccomp-default.json \
@@ -108,6 +117,30 @@ run_tests () {
     return $EXIT_CODE
 }
 
+terminal () {
+   # IMAGE_TAG="dev"
+   NETWORK="--net=none"
+   # Use this if tests require network connection:
+   # NETWORK="--net=host"
+   # TODO: Check if read-only filesystem can be made working
+   # READ_ONLY=""
+   READ_ONLY="--read-only --tmpfs /tmp"   
+   echo Starting shell in the local image "$USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+   docker run \
+    --security-opt seccomp=seccomp-default.json \
+    --security-opt=no-new-privileges \
+    --cap-drop all \
+    $READ_ONLY \
+    --rm \
+    -it \
+    --mount type=bind,source="$(pwd)/output",target=/mnt/output \
+    --mount type=bind,source="$(pwd)/tests",target=/usr/aih/data/src,readonly \
+    $NETWORK \
+    "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
+    /bin/bash
+    EXIT_CODE=$?
+    return $EXIT_CODE
+}
 
 update ()
 {
@@ -120,8 +153,8 @@ update ()
    git pull          || return 1 # Pull the latest changes
    cd ..
    # Update Seccomp profile
-   echo Updating the seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
-   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json || return 1
+   echo Updating the seccomp profile from https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json
+   curl https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json -o seccomp-default.json || return 1
    # PARAMETERS="--no-cache"
    # ENVIRONMENT_FILE="env.yaml"
    echo "Note: env.yaml.lock will not be overwritten (use ./build.sh freeze for this)" 
@@ -130,15 +163,17 @@ update ()
    return 0
 }
 
-
+# TODO: Also export Debian packages installed from
+#      /usr/share/aih/freeze/runtime-packages.txt 
 freeze () {
-   mkdir -p freeze/${IMAGE_TAG}
-   echo Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}
-   cp ${SOURCEFILE} freeze/${IMAGE_TAG}/${SOURCEFILE} || return 1
+   mkdir -p "freeze/${IMAGE_TAG}" || return 1
+   echo "Copying ${SOURCEFILE} to freeze/${IMAGE_TAG}/${SOURCEFILE}"
+   # -- protects against filenames that start with -
+   cp -- "${SOURCEFILE}" "freeze/${IMAGE_TAG}/${SOURCEFILE}" || return 1
    # Check if ENVIRONMENT_FILE ends with .lock or .yaml
    if [[ "$ENVIRONMENT_FILE" == *.lock ]]; then
       echo "Updating $ENVIRONMENT_FILE."
-      cp ${ENVIRONMENT_FILE} ${ENVIRONMENT_FILE}.old || return 1
+      cp "${ENVIRONMENT_FILE}" "${ENVIRONMENT_FILE}.old" || return 1
    elif [[ "$ENVIRONMENT_FILE" == *.yaml ]]; then
       echo "Creating $ENVIRONMENT_FILE.lock for $ENVIRONMENT_FILE"
       ENVIRONMENT_FILE="${ENVIRONMENT_FILE}.lock" 
@@ -153,12 +188,9 @@ freeze () {
       --cap-drop all \
       --rm \
       "$USERNAME/$IMAGE_NAME:$IMAGE_TAG" \
-      micromamba env export -n base > ${ENVIRONMENT_FILE}
-   if [[ $? -ne 0 ]]; then
-      return $?
-   fi
-   echo Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE} 
-   cp ${ENVIRONMENT_FILE} freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}
+      micromamba env export -n base > ${ENVIRONMENT_FILE} || return $?
+   echo "Copying ${ENVIRONMENT_FILE} to freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}"
+   cp "${ENVIRONMENT_FILE}" "freeze/${IMAGE_TAG}/${ENVIRONMENT_FILE}" || return 1
    if [ -s "${ENVIRONMENT_FILE}.old" ]; then
       echo Updated packages:
       echo "=== NEW env.yaml.lock === | === PREVIOUS env.yaml.lock ==="
@@ -197,7 +229,7 @@ if [[ "$1" == "--help" ]]; then
    exit 0
 elif [[ $# -eq 0 || -z "$1" ]]; then
    build
-   exit $?
+   exit $? 
 elif [[ "$1" == "freeze" ]]; then
    freeze
    exit $?
@@ -213,7 +245,10 @@ elif [[ "$1" == "push" ]]; then
    if [[ $EXIT_CODE -ne 0 ]]; then
      echo "FAILED: One or more docker commands failed."
    fi
-   exit $EXIT_CODE   
+   exit $EXIT_CODE
+elif [[ "$1" == "terminal" ]]; then
+   terminal
+   exit $?   
 else
   echo "Invalid option."
   echo

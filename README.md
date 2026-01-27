@@ -1,6 +1,8 @@
 # Pandoc Image for Academic in Heaven
 
-This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the [`mambaorg/micromamba`](https://micromamba-docker.readthedocs.io/en/latest/) image, which itself is (currently) based on Debian `bookwork-slim` for the [Academic in Heaven](https://github.com/academicinheaven) project.
+This is an `linux/arm64` image with Pandoc and core Pandoc components on the basis of the [`mambaorg/micromamba`](https://micromamba-docker.readthedocs.io/en/latest/) image for the [Academic in Heaven](https://github.com/academicinheaven) project.
+
+We currently use the Debian 12 base image because the Pandoc workflow is currently based on the [`haskell:9.12-slim-bookworm`](https://hub.docker.com/layers/library/haskell/9.12-slim-bookworm/images/sha256-8919e82613029971d8129b51ffbe61140f61e51b4cbfb79f90da7be9e59b67ae) image.
 
 As [Academic in Heaven](https://github.com/academicinheaven) is based on `micromamba` and 
 
@@ -8,9 +10,9 @@ As [Academic in Heaven](https://github.com/academicinheaven) is based on `microm
 and
 2. core Pandoc components like `pandoc-plot` need to be built with the same Pandoc version,
 
-we build Pandoc and all required components components from the Haskell package repository [**Hackage**](https://hackage.haskell.org/) via [`cabal-install`](https://hackage.haskell.org/package/cabal-install).
+we build Pandoc and all required components components from the Haskell package repository [**Hackage**](https://hackage.haskell.org/) using the same [`haskell:9.12-slim-bookworm`](https://hub.docker.com/layers/library/haskell/9.12-slim-bookworm/images/sha256-8919e82613029971d8129b51ffbe61140f61e51b4cbfb79f90da7be9e59b67ae) image that is being used by [`pandoc-dockerfiles`](https://github.com/pandoc/dockerfiles/blob/main/3.8.3/debian/Dockerfile). 
 
-As this is is a lengthy process (30 minutes and more), we keep this process separate from the core Academic in Heaven images.
+As this is is a lengthy process (15 minutes and more), we keep this process separate from the core Academic in Heaven images.
 
 ## Components
 
@@ -25,20 +27,23 @@ As this is is a lengthy process (30 minutes and more), we keep this process sepa
 ## Usage
 
 ```bash
-docker run --rm mfhepp/aih-pandoc:latest /bin/bash -c "pandoc --version"
-docker run --rm mfhepp/aih-pandoc:3.2 /bin/bash -c "pandoc --version"
+docker run --rm mfhepp/aih2-pandoc:latest /bin/bash -c "pandoc --version"
+docker run --rm mfhepp/aih2-pandoc:3.8.3 /bin/bash -c "pandoc --version"
 docker run --rm -it --mount type=bind,source="$(pwd)",target=/usr/aih/data/src \
-    mfhepp/aih-pandoc:latest  \
+    mfhepp/aih2-pandoc:latest  \
      /bin/bash
 ```
 
 ## Releases and Tags
 
-The version numbering for `aih-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** 
+The version numbering for `aih2-pandoc` always follows **the  Pandoc version**, `latest` includes **the highest available Pandoc version for which all required components are available.** Any updated version with the same Pandoc version will be marked with an `-rcx` suffix, like `aih2-pandoc-3.8.3-rc1`.
+
+**Note:** The base name is now `aih2-pandoc` (used to be `aih-pandoc`).
 
 | Tag / Release | Pandoc version | Image tag on Docker Hub |
 | --- | --- | --- |
-| latest | 3.2.1 | [mfhepp/aih-pandoc:latest](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
+| latest | 3.8.3 | [mfhepp/aih2-pandoc:latest](https://hub.docker.com/repository/docker/mfhepp/aih2-pandoc/general) |
+| v3.8.3 | 3.8.3 | [mfhepp/aih2-pandoc:3.8.3](https://hub.docker.com/repository/docker/mfhepp/aih2-pandoc/general) |
 | v3.2.1 | 3.2.1 | [mfhepp/aih-pandoc:3.2.1](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 | v3.2 | 3.2 | [mfhepp/aih-pandoc:3.2](https://hub.docker.com/repository/docker/mfhepp/aih-pandoc/general) |
 
@@ -62,14 +67,15 @@ git submodule update --init --recursive
 ```
 
 ```bash
-Usage: ./build.sh [ --help ] [ test | push | freeze | update ]
+Usage: ./build.sh [ --help ] [ test | push | freeze | update | terminal]
 
 Commands(s):
-  (none): Build image
-  test:   Run tests
-  push:   Push Docker image to repository
-  freeze: Create version folder and freeze version.txt and env.yaml.lock
-  update: Update submodules and external files
+  (none):   Build image
+  test:     Run tests
+  push:     Push Docker image to repository
+  freeze:   Create version folder and freeze version.txt and env.yaml.lock
+  update:   Update submodules and external files
+  terminal: Opens a Bash shell for debugging etc.
 ```
 
 Here is the full process:
@@ -96,8 +102,8 @@ Here is the full process:
   - [`pandoc-plot`](https://hackage.haskell.org/package/pandoc-plot)
 3. Make sure `freeze/x.y.z/versions.txt` exists for the current version. If not, create it with `./build.sh freeze`.
 4. Create a new branch: `git checkout -b update_to_pandoc_x.y.z`
-5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**.
-6. Update all Git submodules  and other files with  `./build.sh update`. This essentially does the following:
+5. Edit `versions.txt` and update all versions **and set `IMAGE_TAG` to the new Pandoc version**. Also check if the Docker seccomp profile [`seccomp-default.json`](https://github.com/moby/profiles/blob/main/seccomp/default.json) is available from <https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json>.
+6. Update all Git submodules and other files with  `./build.sh update`. This essentially does the following:
 ```bash
 # Update git submodules
    git submodule update --init --recursive
@@ -107,8 +113,8 @@ Here is the full process:
    git pull           # Pull the latest changes
    cd ..
    # staging / commit / push will be up to the developer
-   # Fetching the latest seccomp profile from https://github.com/moby/moby/blob/master/profiles/seccomp/default.json
-   curl https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json -o seccomp-default.json
+   # Fetching the latest seccomp profile from https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json
+   curl https://raw.githubusercontent.com/moby/profiles/refs/heads/main/seccomp/default.json -o seccomp-default.json
 ```
 7. Try to build and test the updated combinations with `./build.sh`
 8. If successful, produce a release:
