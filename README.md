@@ -135,6 +135,19 @@ docker push mfhepp/aih-pandoc:latest
 
 ## Releases
 
+### v3.8.3
+
+```
+DEBIAN_RELEASE=12
+DEBIAN_CODENAME=bookworm
+MICROMAMBA_VERSION=2.5.0-debian12
+PANDOC_VERSION=3.8.3
+PANDOC_CLI_VERSION=3.8.3
+PANDOC_CROSSREF_VERSION=0.3.22
+LUA_VERSION=5.4
+PANDOC_PLOT_VERSION=1.9.1
+```
+
 ### v3.2.1
 
 ```
