@@ -97,11 +97,18 @@ RUN set -eux; \
     --installdir=/out/bin \
     --install-method=copy \
     --overwrite-policy=always \
+    --enable-executable-stripping \
     "pandoc-cli-${PANDOC_CLI_VERSION}" \
     "pandoc-crossref-${PANDOC_CROSSREF_VERSION}" \
     "pandoc-plot-${PANDOC_PLOT_VERSION}" \
     --constraint "pandoc == ${PANDOC_VERSION}" \
     --constraint "pandoc +embed_data_files"
+# in pandoc_binaries stage
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends binutils \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN strip /out/bin/pandoc /out/bin/pandoc-crossref /out/bin/pandoc-plot || true
 
 # Show linked libs (debugging / sanity)
 RUN set -eux; \
@@ -140,7 +147,8 @@ RUN echo OK: Pandoc binaries are now in /out/bin
 # https://github.com/pandoc/dockerfiles/blob/main/3.8.3/debian/extra/Dockerfile
 # Maybe start with or align closer with those?
 # think about uv instead of pip or mamba (but conda + pip is quite good for the moment)
-FROM micromamba_patched AS aih_pandoc
+FROM "${BASE_IMAGE}" AS aih_pandoc
+# FROM micromamba_patched AS aih_pandoc
 
 ARG BASE_IMAGE
 ARG PANDOC_VERSION

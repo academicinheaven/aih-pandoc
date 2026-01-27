@@ -4,7 +4,7 @@ IMAGE_NAME="aih2-pandoc"
 # Note: The latest version can also be constrained by the Haskell compiler version!
 # Latest: 3.8.3
 PANDOC_VERSION=3.8.3
-AIH_RELEASE="" # "r1" for the first update for the same Pandoc version
+AIH_RELEASE="r1" # "r1" for the first update for the same Pandoc version
 # If AIH_RELEASE="r1" → expands to 3.8.3-r1
 IMAGE_TAG="${PANDOC_VERSION}${AIH_RELEASE:+-${AIH_RELEASE}}"
 DEBIAN_RELEASE=12
