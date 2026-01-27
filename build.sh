@@ -62,7 +62,7 @@ build ()
    echo "LUA_VERSION:           $LUA_VERSION"
    echo
    # Build image
-   docker build \
+   docker build --no-cache\
       ${args:+$args} \
       --build-arg MICROMAMBA_VERSION="${MICROMAMBA_VERSION}" \
       --build-arg BASE_IMAGE="${BASE_IMAGE}" \
